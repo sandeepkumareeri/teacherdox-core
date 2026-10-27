@@ -5,11 +5,12 @@
 // steps (provider, model, status, ms, cost) and routing, as GitHub annotations and a
 // step summary.
 //
-// Env: META_API_KEY (required). Optional fallback for the demo: GEMINI_API_KEY + GEMINI_MODEL
-// (the script, not the core, talks to Google; the core only takes a generate function).
+// Env: META_API_KEY (required). Optional fallback for the demo: GEMINI_API_KEY (+ GEMINI_BACKEND,
+// GEMINI_MODEL) via hosts/gemini.js (the script, not the core, talks to Google; the core only takes a generate function).
 const fs = require('node:fs');
 const path = require('node:path');
 const { createRecordEngine, fromGenerate } = require('../src/engine');
+const { createGeminiGenerate } = require('../hosts/gemini');
 
 const BOARD = fs.readFileSync(path.join(__dirname, '../test/fixtures/board-synthetic.jpg'));
 const AUDIO = process.env.LIVE_AUDIO_DIR;
@@ -17,16 +18,8 @@ const summary = [];
 const note = (title, msg) => console.log(`::notice title=${title}::${String(msg).replace(/\r?\n/g, ' ⏎ ').slice(0, 3500)}`);
 
 function geminiGenerate() {
-  const { GEMINI_API_KEY: key, GEMINI_MODEL: model } = process.env;
-  if (!key || !model) return null;
-  return async (body, { signal } = {}) => {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST', signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${text.slice(0, 300)}`);
-    return JSON.parse(text);
-  };
+  if (!process.env.GEMINI_API_KEY) return null;
+  return createGeminiGenerate().generate;
 }
 
 const audio = name => {

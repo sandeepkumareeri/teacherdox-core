@@ -1,8 +1,8 @@
 # Evaluation: the synthetic cases in eval/cases.json through the Meta Model API, Muse Spark Open on
 # Baseten and Gemini; per-field accuracy, latency, tokens and cost. Boards are rendered and voice notes
 # spoken here (never real classroom data). Results: job summary, log, and the "eval-results" artifact
-# (results.json, RESULTS.md). Secrets: META_API_KEY, BASETEN_API_KEY, GEMINI_API_KEY (+ GEMINI_MODEL
-# repository variable) — a configuration whose key is missing is reported as "not run".
+# (results.json, RESULTS.md). Secrets: META_API_KEY, BASETEN_API_KEY, GEMINI_API_KEY (+ GEMINI_BACKEND=vertex
+# and GEMINI_MODEL repository variables) — a configuration whose key is missing is reported as "not run".
 name: Eval
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ on:
       - 'eval/*.js'
       - 'eval/*.py'
       - 'eval/cases.json'
+      - 'hosts/*.js'
       - '.github/workflows/eval.yml'
 permissions:
   contents: read
@@ -39,12 +40,17 @@ jobs:
             ffmpeg -loglevel error -y -i /tmp/raw.wav -c:a libopus -b:a 24k "eval/data/voices/$id.ogg"
           done
           ls -la eval/data/voices
+      - name: Meta models visible to this key
+        env:
+          META_API_KEY: ${{ secrets.META_API_KEY }}
+        run: node scripts/meta_models.js
       - name: Run
         env:
           META_API_KEY: ${{ secrets.META_API_KEY }}
           BASETEN_API_KEY: ${{ secrets.BASETEN_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          GEMINI_BACKEND: ${{ vars.GEMINI_BACKEND }}
           EVAL_DATA: eval/data
           OUT_DIR: eval/out
         run: node eval/run.js

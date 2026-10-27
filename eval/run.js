@@ -5,18 +5,20 @@
 //   baseten  — Muse Spark Open (Meta's open weights) on Baseten: transcribe, read + check (no
 //              segmentation model, so the whole photo is read). Transcription enabled for every
 //              language here so it is measured, whatever the engine's default routing is.
-//   gemini   — Gemini via generateContent (GEMINI_API_KEY; GEMINI_MODEL, else the newest stable Flash
-//              the key can call); no segmentation
+//   gemini   — Gemini via generateContent through hosts/gemini.js (GEMINI_API_KEY; GEMINI_BACKEND=vertex
+//              for Vertex AI express mode, else AI Studio; GEMINI_MODEL, else the newest stable Flash the
+//              key can call); no segmentation
 //
 // No cross-provider fallback inside a configuration: every number belongs to one provider.
 // Writes OUT_DIR/results.json and OUT_DIR/RESULTS.md, and prints the table to the log.
 //
-// Env: META_API_KEY, BASETEN_API_KEY, GEMINI_API_KEY (+ optional GEMINI_MODEL) (each optional; missing = not run),
+// Env: META_API_KEY, BASETEN_API_KEY, GEMINI_API_KEY (+ optional GEMINI_BACKEND, GEMINI_MODEL) (each optional; missing = not run),
 //      EVAL_DATA (rendered boards/ and voices/), OUT_DIR, EVAL_CONFIGS (default meta,baseten,gemini)
 const fs = require('node:fs');
 const path = require('node:path');
 const E = require('../src/engine');
 const { scoreRecord, FIELDS } = require('./score');
+const { createGeminiGenerate } = require('../hosts/gemini');
 
 const CASES = JSON.parse(fs.readFileSync(path.join(__dirname, 'cases.json'), 'utf8'));
 const DATA = process.env.EVAL_DATA || path.join(__dirname, 'data');
@@ -24,36 +26,6 @@ const OUT = process.env.OUT_DIR || path.join(__dirname, 'out');
 const CONFIGS = (process.env.EVAL_CONFIGS || 'meta,baseten,gemini').split(',').map(s => s.trim()).filter(Boolean);
 const LABEL = { meta: 'Meta Model API', baseten: 'Muse Spark Open (Baseten)', gemini: 'Gemini' };
 const notice = (t, m) => console.log(`::notice title=${t}::${String(m).replace(/\r?\n/g, ' ⏎ ').slice(0, 3500)}`);
-
-/**
- * The Gemini model to evaluate: GEMINI_MODEL when set, otherwise the newest stable Flash model this key
- * can call (from Google's model list) — the same rule the TeacherDox product uses. No name is hard-coded.
- */
-async function resolveGeminiModel() {
-  if (process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
-  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY } });
-  if (!res.ok) throw new Error(`model list HTTP ${res.status}`);
-  const version = n => Number((n.match(/^gemini-(\d+(?:\.\d+)?)-flash$/) || [])[1]);
-  const stable = ((await res.json()).models || [])
-    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
-    .map(m => m.name.replace(/^models\//, ''))
-    .filter(n => Number.isFinite(version(n)))
-    .sort((a, b) => version(b) - version(a));
-  if (!stable.length) throw new Error('no stable gemini-*-flash model available to this key');
-  return stable[0];
-}
-
-function geminiGenerate(model) {
-  const key = process.env.GEMINI_API_KEY;
-  return async (body, { signal } = {}) => {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST', signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${text.slice(0, 300)}`);
-    return JSON.parse(text);
-  };
-}
 
 /** One engine per configuration, or the reason it cannot run. */
 async function engineFor(config) {
@@ -66,10 +38,11 @@ async function engineFor(config) {
     providers = [E.createBasetenProvider({ transcribeLanguages: '*' })];
   } else if (config === 'gemini') {
     if (!process.env.GEMINI_API_KEY) return { skip: 'GEMINI_API_KEY secret not set' };
+    const gemini = createGeminiGenerate();
     let model;
-    try { model = await resolveGeminiModel(); } catch (e) { return { skip: `could not choose a Gemini model: ${e.message}` }; }
-    LABEL.gemini = `Gemini (${model})`;
-    providers = [E.fromGenerate(geminiGenerate(model), { name: 'gemini' })];
+    try { model = await gemini.resolveModel(); } catch (e) { return { skip: `could not choose a Gemini model: ${e.message}` }; }
+    LABEL.gemini = `Gemini (${model}, ${gemini.backend === 'vertex' ? 'Vertex AI' : 'AI Studio'})`;
+    providers = [E.fromGenerate(gemini.generate, { name: 'gemini' })];
   } else return { skip: `unknown configuration ${config}` };
   const router = E.createRouter({ providers, dailyLimit: { meta: 300, baseten: 300, gemini: 300 }, timeoutMs: { default: 180000 } });
   return { engine: E.createEngine({ router }) };
