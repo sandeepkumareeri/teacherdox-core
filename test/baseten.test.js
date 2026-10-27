@@ -27,7 +27,7 @@ test('request shape: exact hackathon model id, Bearer auth, system role, image a
   assert.equal(body.response_format.type, 'json_schema');
   assert.equal(r.output.session.subject, 'Mathematics', 'fenced JSON is parsed');
   assert.deepEqual(r.usage, { input: 1704, output: 724 });
-  assert.equal(r.cost_usd, null, 'price unknown → null, never estimated');
+  assert.equal(r.cost_usd, Math.round((1704 * 1.25 + 724 * 4.25) / 1e6 * 1e6) / 1e6, "Baseten's published price");
 });
 
 test('a reply that does not match the schema is an error, so the router falls back', async () => {
@@ -58,15 +58,19 @@ test('voice note goes as audio_url with the original OGG bytes (no conversion)',
   const ogg = Buffer.from('OggS fake opus bytes');
   const r = await p.transcribe({ audio: { bytes: ogg, media_type: 'audio/ogg' }, language: 'en' });
   const part = bt.calls[0].body.messages[0].content[1];
+  assert.equal(bt.calls[0].body.response_format, undefined, 'structured output made the model report no speech — plain labelled lines instead');
   assert.equal(part.type, 'audio_url');
   assert.equal(part.audio_url.url, `data:audio/ogg;base64,${ogg.toString('base64')}`);
   assert.equal(r.output.text, 'Class 8B maths, fractions. Homework 3.2.');
   assert.equal(r.output.language, 'en');
 });
 
-test('"heard no speech" is an error, never an empty transcript', async () => {
+test('"heard no speech" is an error, never an empty transcript; labelled replies are parsed', async () => {
   const p = E.createBasetenProvider({ apiKey: 'k', fetch: mockBaseten({ heard: false }).fetch });
-  await assert.rejects(p.transcribe({ audio: { bytes: wav(), media_type: 'audio/wav' }, language: 'en' }), /heard no speech/);
+  await assert.rejects(p.transcribe({ audio: { bytes: wav(), media_type: 'audio/wav' }, language: 'en' }), /heard no speech.*don't see an audio file/);
+  const { parseLabelled } = require('../src/engine/providers/baseten');
+  assert.deepEqual(parseLabelled('TRANSCRIPT: Klasse 8b\nENGLISH: Class 8B\nLANGUAGE: de'), { transcript: 'Klasse 8b', english: 'Class 8B', language: 'de' });
+  assert.equal(parseLabelled('I cannot listen to audio.'), null);
 });
 
 test('Malayalam is not routed to Muse Spark Open unless enabled (it heard no speech in the live probe)', async () => {

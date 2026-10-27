@@ -31,6 +31,10 @@ jobs:
         run: npm test
       - name: ffmpeg (for the board crop)
         run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null)
+      - name: Meta models visible to this key
+        env:
+          META_API_KEY: ${{ secrets.META_API_KEY }}
+        run: node scripts/meta_models.js
       - name: Live run on Meta
         env:
           META_API_KEY: ${{ secrets.META_API_KEY }}

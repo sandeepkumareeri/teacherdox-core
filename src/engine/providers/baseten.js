@@ -14,6 +14,10 @@
 //     8–48 kHz; ≤ 25 MB / 5 min; data: URLs allowed. WhatsApp OGG/Opus goes as-is.
 //   structured outputs (docs): Muse Spark Open "accepts json_schema but doesn't enforce the schema" —
 //     so every reply is parsed and validated here, and a reply that does not match is an error (→ fallback)
+//   price (baseten.co/pricing, 27 Oct 2026): $1.25 input, $0.15 cached input, $4.25 output per 1M tokens
+//   transcription (observed): with response_format json_schema the model reported "no speech" for every
+//     voice note, English included; with a plain prompt asking for labelled lines it heard English.
+//     So transcription uses the labelled-line format, and a reply without a TRANSCRIPT line is "not heard".
 //
 //   structure / check → chat completion with the JSON schema in response_format and in the prompt
 //   transcribe        → chat completion with the voice note; asks the model to say if it heard nothing
@@ -39,14 +43,19 @@ function parseJson(text) {
   throw new Error('content is not JSON');
 }
 
-const TRANSCRIBE_SCHEMA = {
-  type: 'object', additionalProperties: false, required: ['heard_speech', 'transcript', 'english', 'language'],
-  properties: { heard_speech: { type: 'boolean' }, transcript: { type: 'string' }, english: { type: 'string' }, language: { type: 'string' } },
-};
+const PRICE = { input_per_mtok: 1.25, output_per_mtok: 4.25 };   // baseten.co/pricing, 27 Oct 2026 (cached input $0.15 not applied)
+
+/** "TRANSCRIPT: … / ENGLISH: … / LANGUAGE: xx" → fields, or null when the model gave no transcript. */
+function parseLabelled(text) {
+  const grab = label => (String(text).match(new RegExp(`^\\s*${label}\\s*:\\s*(.*)$`, 'im')) || [])[1]?.trim() || '';
+  const transcript = grab('TRANSCRIPT'), english = grab('ENGLISH'), language = grab('LANGUAGE');
+  return transcript || english ? { transcript, english, language: language.replace(/[^a-z-]/gi, '').slice(0, 5) } : null;
+}
 
 /**
  * options: apiKey (BASETEN_API_KEY), baseUrl, model (BASETEN_MODEL), fetch, reasoningEffort ('low'),
  *   maxTokens (12000), transcribeLanguages (['en'] — '*' for all), prices { input_per_mtok, output_per_mtok }
+ *   (default: Baseten's published Muse Spark Open price; null = unknown)
  */
 function createBasetenProvider({
   apiKey = process.env.BASETEN_API_KEY,
@@ -56,7 +65,7 @@ function createBasetenProvider({
   reasoningEffort = 'low',
   maxTokens = 12000,
   transcribeLanguages = ['en'],
-  prices = null,
+  prices = PRICE,
 } = {}) {
   async function chat(messages, { signal, schema, schemaName }) {
     if (!apiKey) throw Object.assign(new Error('BASETEN_API_KEY is not set'), { model });
@@ -91,17 +100,12 @@ function createBasetenProvider({
   }
 
   async function transcribe({ audio, language }, { signal } = {}) {
-    const prompt = [
-      'This message contains a teacher\'s voice note about a class they taught.',
-      'If you can hear speech in it, give the transcript exactly as spoken in its original language and script, an English rendering, and the ISO 639-1 language code.',
-      'If you cannot hear any speech or there is no audio, set heard_speech to false and leave the other fields empty. Never guess.',
-      `Reply with one JSON object matching this JSON Schema: ${JSON.stringify(TRANSCRIBE_SCHEMA)}`,
-    ].join(' ');
-    const r = await chat([{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'audio_url', audio_url: { url: dataUrl(audio) } }] }],
-      { signal, schema: TRANSCRIBE_SCHEMA, schemaName: 'voice_note' });
-    const o = r.output;
-    if (!o.heard_speech || !(o.transcript || o.english).trim()) throw Object.assign(new Error('the model heard no speech in the voice note'), { model: r.model });
-    const original = o.transcript.trim(), english = o.english.trim();
+    const prompt = 'Transcribe this voice note exactly, in its original language and script. Then give an English translation. '
+      + 'Answer as three lines: TRANSCRIPT: … / ENGLISH: … / LANGUAGE: <ISO 639-1>. If there is no speech you can hear, say so and give no TRANSCRIPT line.';
+    const r = await chat([{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'audio_url', audio_url: { url: dataUrl(audio) } }] }], { signal });
+    const o = parseLabelled(r.output);
+    if (!o) throw Object.assign(new Error(`the model heard no speech in the voice note: "${String(r.output).slice(0, 120)}"`), { model: r.model });
+    const original = o.transcript, english = o.english;
     const text = english && english !== original ? `${original}\n[English rendering: ${english}]` : original || english;
     const seconds = media.isTranscribeReadyWav(audio.bytes) ? media.wavSeconds(audio.bytes) : null;
     return { ...r, output: { text, language: lang(o.language) || lang(language) || null, duration_ms: seconds == null ? null : Math.round(seconds * 1000) } };
@@ -126,4 +130,4 @@ function createBasetenProvider({
 
 const round6 = x => Math.round(x * 1e6) / 1e6;
 
-module.exports = { createBasetenProvider, DEFAULT_MODEL, parseJson };
+module.exports = { createBasetenProvider, DEFAULT_MODEL, PRICE, parseJson, parseLabelled };

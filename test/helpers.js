@@ -102,9 +102,11 @@ function mockBaseten({ record = RECORD(), check = ALL_SUPPORTED, heard = true, t
     const reply = (st, obj) => ({ ok: st < 300, status: st, text: async () => JSON.stringify(obj) });
     if (status !== 200) return reply(status, { error: { code: String(status), message: 'boom', type: 'Bad Request' } });
     const name = body.response_format?.json_schema?.name;
-    const out = name === 'voice_note' ? { heard_speech: heard, transcript: heard ? transcript : '', english: heard ? transcript : '', language: heard ? 'en' : '' }
-      : name === 'tdx_check' ? check : record;
-    const content = fenced ? '```json\n' + JSON.stringify(out) + '\n```' : JSON.stringify(out);
+    const isAudio = body.messages.some(m => Array.isArray(m.content) && m.content.some(p => p.type === 'audio_url'));
+    const out = name === 'tdx_check' ? check : record;
+    const content = isAudio
+      ? (heard ? `TRANSCRIPT: ${transcript}\nENGLISH: ${transcript}\nLANGUAGE: en` : "I don't see an audio file attached to your message, so I don't have anything to transcribe.")
+      : fenced ? '```json\n' + JSON.stringify(out) + '\n```' : JSON.stringify(out);
     return reply(200, {
       id: 'x', object: 'chat.completion', created: 1, model: body.model,
       choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content, reasoning_content: 'We need to…' } }],
