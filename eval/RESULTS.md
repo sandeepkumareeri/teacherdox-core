@@ -36,9 +36,11 @@ Run: https://github.com/sandeepkumareeri/teacherdox-core/actions/runs/4050357238
 - **Holds are the engine working as intended:** nothing usable heard → held for the educator, never an invented record.
 - **Not yet measured:** Gemini (no key in this run); real (non-synthetic) voice notes.
 
-## Earlier run
+## Other runs
 
-Run 40500600639 (12:05 UTC) measured only Muse Spark Open — the repository's Meta key had no model access at the time — with the same board result (98%) and English voice notes at 80%.
+- **Run 40527430616** (27 Oct, ~14:55 UTC) — same two configurations: Meta Model API 82% (boards 98%; voice en 100%, hi 80%, pt 100%; te/ml held; p50 9.9 s), Muse Spark Open 59% (boards 98%; voice 0% in every language this time; p50 10.9 s; $0.0107 per record). Gemini skipped: key present, model not set.
+- **Run 40528431277** (27 Oct, 15:14 UTC) — the first run with a Gemini key, model picked from the key's list (`gemini-3.8-flash`). **No comparison possible:** Gemini answered HTTP 402 "prepayment credits are depleted" on 12 of 20 cases, and the Meta Model API answered HTTP 404 `model_not_found` on 17 of 20 (it had worked an hour earlier). Both are account/key problems, not model results, so both columns are left out. Muse Spark Open alone: boards 98% again, English voice 1 of 2, every other voice note not heard.
+- Run 40500600639 (12:05 UTC) measured only Muse Spark Open — the repository's Meta key had no model access at the time — with the same board result (98%) and English voice notes at 80%.
 
 ## Per case
 

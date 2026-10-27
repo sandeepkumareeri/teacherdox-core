@@ -51,7 +51,9 @@ bar are listed under "Missing"):
 - Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) — **first
   live run succeeded 27 Oct** (SAM box exact, read correct, check flagged the inferred subject → confirm;
   12.4 s; see `docs/meta-model-api-notes.md`). The repo's `META_API_KEY` lost model access 11:49–~12:20
-  UTC; fixed by Sandeep. `GEMINI_API_KEY` secret + `GEMINI_MODEL` variable still not set.
+  UTC; fixed by Sandeep, then answered 404 `model_not_found` again in eval run 40528431277 (15:14 UTC).
+  `GEMINI_API_KEY` set; `GEMINI_MODEL` unset → eval picks the newest stable Flash (`gemini-3.8-flash`), but the
+  key's AI Studio prepaid credits are depleted (HTTP 402).
   `engine-live.yml` (all languages) not yet run. The sandbox cannot reach api.meta.ai or baseten.co.
 - `src/engine/providers/baseten.js`: Muse Spark Open (Meta open weights) on Baseten,
   `meta-models/muse-spark-open-1026`, third in the provider order (Meta API → Baseten → host fallback).
@@ -64,7 +66,7 @@ bar are listed under "Missing"):
   marked not comparable), `.github/workflows/eval.yml`, `eval/RESULTS.md` (run 40503572389: Meta Model API 81% vs Muse Spark
   Open 67% field accuracy; boards 98% both; Meta voice en/hi/pt good, te/ml held; Gemini not run — no key).
 
-Missing against the quality bar: Gemini column in `eval/RESULTS.md` (needs key); API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
+Missing against the quality bar: Gemini column in `eval/RESULTS.md` (needs Gemini credits, and the Meta key working in the same run); API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
 CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; CI + CodeQL; SECURITY /
 CONTRIBUTING / CODE_OF_CONDUCT / CHANGELOG; quickstart + how-a-record-is-born + Mermaid diagrams;
 README rewrite; verifier page in brand style (#1B5E3B, DM Sans/Mono); tag v0.1.0.
