@@ -151,7 +151,10 @@ function markdown(results, meta) {
     ...langs.map(l => row(`Voice notes: ${l}`, s => p100(s.voices_by_lang[l]))),
     row('Latency per record, model time p50 / p95', s => `${secs(s.model_ms.p50)} / ${secs(s.model_ms.p95)}`),
     row('Tokens per record (in / out, incl. reasoning)', s => s.tokens_per_record.input == null ? '—' : `${Math.round(s.tokens_per_record.input)} / ${Math.round(s.tokens_per_record.output)}`),
-    row('Cost per record', s => (s.cost_per_record_usd != null ? `$${s.cost_per_record_usd.toFixed(5)} (${s.records_priced} priced)` : `unknown (${s.records_unpriced} records include a step with no published price)`)),
+    // A mean over a few priced records (e.g. only the held ones) is not the configuration's cost: say unknown.
+    row('Cost per record', s => (s.cost_per_record_usd != null && s.records_priced >= s.produced / 2
+      ? `$${s.cost_per_record_usd.toFixed(5)} (${s.records_priced} of ${s.produced} priced)`
+      : `unknown — ${s.records_unpriced} of ${s.produced} records include a step with no published price`)),
     row('Routing: auto-lock / confirm / hold', s => `${s.decisions.auto_lock || 0} / ${s.decisions.confirm || 0} / ${s.decisions.hold || 0}`),
     '',
     '## Where each configuration was weaker', '',
