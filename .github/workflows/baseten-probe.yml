@@ -1,4 +1,4 @@
-# Baseten probe: prints the Baseten docs pages the provider is built on, then makes a few raw calls
+# Baseten probe: makes a few raw calls
 # to Muse Spark Open (meta-models/muse-spark-open-1026) on synthetic data — text, system role, JSON
 # schema, the synthetic board image, and synthetic English / Malayalam voice notes — and logs what
 # comes back. Needs the BASETEN_API_KEY repository secret.
@@ -9,18 +9,10 @@ on:
     branches: ['claude/**']
     paths:
       - 'scripts/baseten_probe.js'
-      - 'scripts/baseten_docs.sh'
       - '.github/workflows/baseten-probe.yml'
 permissions:
   contents: read
 jobs:
-  docs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Baseten docs (llms.txt + relevant pages)
-        run: bash scripts/baseten_docs.sh
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 15
