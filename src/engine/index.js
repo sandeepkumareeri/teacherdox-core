@@ -10,17 +10,20 @@ const { createRouter, RouterError, CAPABILITIES } = require('./router');
 const { createEngine, PIPELINE_VERSION } = require('./engine');
 const { createMetaProvider, parseSamBoxes } = require('./providers/meta');
 const { fromGenerate, toGeminiSchema } = require('./providers/gemini');
+const { createBasetenProvider } = require('./providers/baseten');
 const score = require('./score');
 const media = require('./media');
 
 /**
- * Convenience: Meta first (when META_API_KEY is set), then the fallback provider(s).
- * options: meta (provider options or false), fallback (provider or [providers]),
- *   timeoutMs, dailyLimit ({ meta: 500 }), policy, log
+ * Convenience: the Meta Model API first, then Muse Spark Open (Meta's open weights) on Baseten when
+ * a Baseten key is configured, then the host's fallback provider(s).
+ * options: meta / baseten (provider options, or false to leave out), fallback (provider or [providers]),
+ *   timeoutMs, dailyLimit ({ meta: 500, baseten: 500 }), policy, log
  */
-function createRecordEngine({ meta = {}, fallback = [], timeoutMs, dailyLimit, policy, log, boardQueries } = {}) {
+function createRecordEngine({ meta = {}, baseten = {}, fallback = [], timeoutMs, dailyLimit, policy, log, boardQueries } = {}) {
   const providers = [];
   if (meta !== false) providers.push(createMetaProvider(meta));
+  if (baseten !== false && (baseten.apiKey || process.env.BASETEN_API_KEY)) providers.push(createBasetenProvider(baseten));
   providers.push(...[].concat(fallback).filter(Boolean));
   const router = createRouter({ providers, timeoutMs, dailyLimit, log });
   return { ...createEngine({ router, policy, boardQueries }), router };
@@ -28,5 +31,5 @@ function createRecordEngine({ meta = {}, fallback = [], timeoutMs, dailyLimit, p
 
 module.exports = {
   createRecordEngine, createEngine, createRouter, RouterError, CAPABILITIES, PIPELINE_VERSION,
-  createMetaProvider, parseSamBoxes, fromGenerate, toGeminiSchema, score, media,
+  createMetaProvider, parseSamBoxes, createBasetenProvider, fromGenerate, toGeminiSchema, score, media,
 };

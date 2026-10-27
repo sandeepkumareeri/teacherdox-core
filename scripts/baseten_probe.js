@@ -3,7 +3,7 @@
 // data only, printed as-is so the provider is built on observed behaviour. Each call reports
 // HTTP status, latency, the message fields that came back (content, any reasoning field) and usage.
 //
-// Env: BASETEN_API_KEY (required); PROBE_AUDIO_DIR with en.wav / ml.wav / ml.ogg (optional).
+// Env: BASETEN_API_KEY (required); PROBE_AUDIO_DIR with <lang>.ogg / <lang>.wav voice notes (optional).
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -56,15 +56,18 @@ const schema = {
   });
   await call('reasoning_effort low', { messages: [{ role: 'user', content: 'What is 17 * 23? Answer with the number only.' }], reasoning_effort: 'low', max_tokens: 4000 });
 
+  // Voice notes exactly as the engine sends them (providers/baseten.js: audio_url data URL, OGG as-is).
   if (AUDIO && fs.existsSync(AUDIO)) {
-    const ask = 'Transcribe this voice note exactly, in its original language and script. Then give an English translation. Answer as: TRANSCRIPT: … / ENGLISH: … / LANGUAGE: <ISO 639-1>';
-    for (const [lang, file, fmt] of [['en', 'en.wav', 'wav'], ['ml', 'ml.wav', 'wav'], ['ml', 'ml.ogg', 'ogg']]) {
-      const f = path.join(AUDIO, file);
-      if (!fs.existsSync(f)) continue;
-      const data = fs.readFileSync(f).toString('base64');
-      await call(`audio ${lang} ${fmt} (input_audio)`, { messages: [{ role: 'user', content: [{ type: 'text', text: ask }, { type: 'input_audio', input_audio: { data, format: fmt } }] }], max_tokens: 6000 });
-      if (fmt === 'wav') {
-        await call(`audio ${lang} ${fmt} (audio_url data URL)`, { messages: [{ role: 'user', content: [{ type: 'text', text: ask }, { type: 'audio_url', audio_url: { url: `data:audio/${fmt};base64,${data}` } }] }], max_tokens: 6000 });
+    const { createBasetenProvider } = require('../src/engine/providers/baseten');
+    const p = createBasetenProvider({ transcribeLanguages: '*' });
+    for (const f of fs.readdirSync(AUDIO).filter(x => /\.(ogg|wav)$/.test(x)).sort()) {
+      const [lang, ext] = f.split('.');
+      const t0 = Date.now();
+      try {
+        const r = await p.transcribe({ audio: { bytes: fs.readFileSync(path.join(AUDIO, f)), media_type: ext === 'ogg' ? 'audio/ogg' : 'audio/wav' }, language: lang });
+        notice(`transcribe ${f} ✓ ${Date.now() - t0} ms`, `language=${r.output.language} | ${r.output.text} | usage=${JSON.stringify(r.usage)}`);
+      } catch (e) {
+        notice(`transcribe ${f} ✗ ${Date.now() - t0} ms`, e.message);
       }
     }
   }
