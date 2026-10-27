@@ -65,6 +65,17 @@ test('Vertex: refused model list falls back to the AI Studio list for the name o
   assert.throws(() => createGeminiGenerate({ apiKey: '' }), /apiKey/);
 });
 
+test('Vertex: no model list readable → the product default alias, confirmed by a one-token call', async () => {
+  const m = mockFetch([[/aiplatform.*\/models\?/, 401, { error: 'API keys are not supported by this API' }],
+    [/generativelanguage/, 403, { error: 'blocked' }],
+    [/aiplatform.*gemini-flash-latest:generateContent/, 200, REPLY]]);
+  const g = createGeminiGenerate({ apiKey: 'k', backend: 'vertex', model: '', fetch: m.fetch });
+  assert.equal(await g.resolveModel(), 'gemini-flash-latest');
+  assert.equal(g.answeredBy(), 'gemini-9.1-flash');
+  const none = mockFetch([[/./, 401, { error: 'no' }]]);
+  await assert.rejects(createGeminiGenerate({ apiKey: 'k', backend: 'vertex', model: '', fetch: none.fetch }).resolveModel(), /model list HTTP 401.*gemini-flash-latest HTTP 401/);
+});
+
 test('the core (src/) never calls Google and never requires hosts/', () => {
   const files = [];
   const walk = d => fs.readdirSync(d, { withFileTypes: true }).forEach(e => e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.js') && files.push(path.join(d, e.name)));

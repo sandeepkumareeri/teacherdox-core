@@ -4,7 +4,7 @@
 // this file and never talks to Google: a host passes its own generate function, as the TeacherDox
 // product passes its gemini.generate.
 //
-//   createGeminiGenerate({ apiKey, backend, model, fetch }) → { generate, resolveModel, backend, model() }
+//   createGeminiGenerate({ apiKey, backend, model, fetch }) → { generate, resolveModel, backend, model(), answeredBy() }
 //
 // Two backends, the same request body (mirrors the product's gemini.js):
 //   studio  — AI Studio Gemini API, generativelanguage.googleapis.com (default)
@@ -15,11 +15,13 @@
 // else → AI Studio).
 //
 // Model: `model`, else GEMINI_MODEL, else resolveModel() picks the newest stable Flash model from the
-// backend's model list (Vertex: publisher models; if that list is refused, AI Studio's list is used
-// for the name only). No model name is hard-coded.
+// backend's model list. Vertex express mode accepts API keys only on generateContent (its model list
+// answers 401), so when no list can be read the product's default alias `gemini-flash-latest` is
+// used, after a one-token call confirms it; the model that answered (`modelVersion`) is reported.
 
 const STUDIO = 'https://generativelanguage.googleapis.com/v1beta';
 const VERTEX = 'https://aiplatform.googleapis.com/v1/publishers/google';
+const DEFAULT_ALIAS = 'gemini-flash-latest';   // the TeacherDox product's default (its gemini.js)
 const VERTEX_LIST = 'https://aiplatform.googleapis.com/v1beta1/publishers/google/models';
 
 const versionOf = n => (n.match(/gemini-(\d+(?:\.\d+)*)/) || [, '0'])[1].split('.').map(Number);
@@ -51,6 +53,7 @@ function createGeminiGenerate({ apiKey = process.env.GEMINI_API_KEY, backend = p
   if (!apiKey) throw new Error('createGeminiGenerate: apiKey (GEMINI_API_KEY) required');
   const vertex = String(backend || '').toLowerCase() === 'vertex';
   let current = model ? String(model).replace(/^models\//, '') : null;
+  let answered = null;   // modelVersion of the confirming call, when the alias was used
 
   async function getJson(url, headers = {}) {
     const res = await fetch(url, { headers });
@@ -73,11 +76,15 @@ function createGeminiGenerate({ apiKey = process.env.GEMINI_API_KEY, backend = p
         errors.push('no stable gemini-*-flash model in the list');
       } catch (e) { errors.push(`model list ${e.message}`); }
     }
+    try {
+      const r = await post(DEFAULT_ALIAS, { contents: [{ role: 'user', parts: [{ text: 'Reply OK.' }] }], generationConfig: { maxOutputTokens: 16 } });
+      answered = r.modelVersion || null;
+      return (current = DEFAULT_ALIAS);
+    } catch (e) { errors.push(`${DEFAULT_ALIAS} ${e.message}`); }
     throw new Error(errors.join('; '));
   }
 
-  async function generate(body, { signal } = {}) {
-    const name = await resolveModel();
+  async function post(name, body, signal) {
     if (vertex && Array.isArray(body.contents)) body = { ...body, contents: body.contents.map(c => (c.role ? c : { role: 'user', ...c })) };
     const res = vertex
       ? await fetch(`${VERTEX}/models/${name}:generateContent?key=${encodeURIComponent(apiKey)}`, { method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -87,7 +94,11 @@ function createGeminiGenerate({ apiKey = process.env.GEMINI_API_KEY, backend = p
     return JSON.parse(text);
   }
 
-  return { generate, resolveModel, backend: vertex ? 'vertex' : 'studio', model: () => current };
+  async function generate(body, { signal } = {}) {
+    return post(await resolveModel(), body, signal);
+  }
+
+  return { generate, resolveModel, backend: vertex ? 'vertex' : 'studio', model: () => current, answeredBy: () => answered };
 }
 
 module.exports = { createGeminiGenerate, pickModel };

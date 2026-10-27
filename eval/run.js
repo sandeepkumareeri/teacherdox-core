@@ -41,7 +41,8 @@ async function engineFor(config) {
     const gemini = createGeminiGenerate();
     let model;
     try { model = await gemini.resolveModel(); } catch (e) { return { skip: `could not choose a Gemini model: ${e.message}` }; }
-    LABEL.gemini = `Gemini (${model}, ${gemini.backend === 'vertex' ? 'Vertex AI' : 'AI Studio'})`;
+    const via = gemini.backend === 'vertex' ? 'Vertex AI' : 'AI Studio';
+    LABEL.gemini = `Gemini (${gemini.answeredBy() && gemini.answeredBy() !== model ? `${model} → ${gemini.answeredBy()}` : model}, ${via})`;
     providers = [E.fromGenerate(gemini.generate, { name: 'gemini' })];
   } else return { skip: `unknown configuration ${config}` };
   const router = E.createRouter({ providers, dailyLimit: { meta: 300, baseten: 300, gemini: 300 }, timeoutMs: { default: 180000 } });
