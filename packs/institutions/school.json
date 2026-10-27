@@ -1,0 +1,22 @@
+{
+  "type": "school",
+  "session_kinds": [
+    "period",
+    "lab",
+    "other"
+  ],
+  "default_kind": "period",
+  "field_terms": {
+    "session.label": "field.label.period",
+    "session.cohort": "field.cohort.class",
+    "session.subject": "field.subject",
+    "session.course": "field.course",
+    "session.unit": "field.unit.chapter",
+    "content.assignments": "field.assignments.homework"
+  },
+  "promotions": {
+    "session.cohort": "critical"
+  },
+  "approver_role": "role.headmaster",
+  "model_vocabulary": "a school teacher; sessions are periods; cohort is class and section (e.g. \"8B\", \"10-A\")"
+}

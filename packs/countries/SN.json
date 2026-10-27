@@ -1,0 +1,21 @@
+{
+  "country": "SN",
+  "name": "Senegal",
+  "timezones": [
+    "Africa/Dakar"
+  ],
+  "default_timezone": "Africa/Dakar",
+  "locales": [
+    "fr"
+  ],
+  "default_record_locale": "fr",
+  "approver_hierarchy": [
+    "directeur d'école",
+    "IEF (Inspection de l'Éducation et de la Formation)",
+    "IA (Inspection d'Académie)"
+  ],
+  "academic_year_start_month": 10,
+  "academic_year_note": "school year usually starts in October",
+  "curriculum_frameworks": [],
+  "data_residency": "SN"
+}

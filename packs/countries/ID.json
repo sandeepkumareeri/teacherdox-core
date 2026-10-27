@@ -1,0 +1,24 @@
+{
+  "country": "ID",
+  "name": "Indonesia",
+  "timezones": [
+    "Asia/Jakarta",
+    "Asia/Makassar",
+    "Asia/Jayapura"
+  ],
+  "default_timezone": null,
+  "locales": [
+    "id"
+  ],
+  "default_record_locale": "id",
+  "approver_hierarchy": [
+    "kepala sekolah",
+    "dinas pendidikan (district or city)"
+  ],
+  "academic_year_start_month": 7,
+  "academic_year_note": "school year starts in July",
+  "curriculum_frameworks": [
+    "Kurikulum Merdeka"
+  ],
+  "data_residency": "ID"
+}

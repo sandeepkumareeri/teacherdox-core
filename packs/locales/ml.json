@@ -1,0 +1,63 @@
+{
+  "locale": "ml",
+  "name": "Malayalam",
+  "native_name": "മലയാളം",
+  "direction": "ltr",
+  "review": "draft translation, needs native-speaker review",
+  "messages": {
+    "status.auto_lock": "രേഖപ്പെടുത്തി. ഒപ്പിടാൻ തയ്യാർ.",
+    "status.confirm": "രേഖപ്പെടുത്തി. ദയവായി ഇവ പരിശോധിക്കുക: {fields}.",
+    "status.hold.unusable": "ഇത് വായിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും അയക്കുക, അല്ലെങ്കിൽ പഠിപ്പിച്ചത് എന്താണെന്ന് ടൈപ്പ് ചെയ്യുക.",
+    "status.hold.irrelevant": "ഇത് ഒരു ക്ലാസിനെക്കുറിച്ചുള്ളതായി തോന്നുന്നില്ല. ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല.",
+    "status.hold.contradicted": "{field} അയച്ചതുമായി ഒത്തുപോകുന്നില്ല. ദയവായി പരിശോധിക്കുക.",
+    "legend.guess": "⚠ = സ്വയം പൂരിപ്പിച്ചത്, ദയവായി പരിശോധിക്കുക.",
+    "auto_sign": "നിങ്ങൾ ഒപ്പിട്ടില്ലെങ്കിൽ {time}-ന് സ്വയം ഒപ്പിടും.",
+    "action.sign": "ഒപ്പിടുക",
+    "action.view": "രേഖ കാണുക",
+    "action.edit": "തിരുത്തുക",
+    "signed": {
+      "one": "ഒരു രേഖയിൽ ഒപ്പിട്ടു.",
+      "other": "{n} രേഖകളിൽ ഒപ്പിട്ടു."
+    },
+    "sent_to": "അയച്ചത്: {approver}",
+    "digest": {
+      "one": "{date} · 1 രേഖ",
+      "other": "{date} · {n} രേഖകൾ"
+    },
+    "late": "ക്ലാസ് കഴിഞ്ഞ് {days} ദിവസത്തിന് ശേഷമാണ് അയച്ചത്. ദയവായി സ്ഥിരീകരിക്കുക."
+  },
+  "terms": {
+    "field.subject": "വിഷയം",
+    "field.course": "കോഴ്സ്",
+    "field.programme": "പ്രോഗ്രാം",
+    "field.unit.chapter": "അധ്യായം",
+    "field.unit.module": "മൊഡ്യൂൾ",
+    "field.unit.unit": "യൂണിറ്റ്",
+    "field.cohort.class": "ക്ലാസ്",
+    "field.cohort.batch": "ബാച്ച്",
+    "field.cohort.section": "സെക്ഷൻ",
+    "field.cohort.group": "ഗ്രൂപ്പ്",
+    "field.label.period": "പീരിയഡ്",
+    "field.label.session": "സെഷൻ",
+    "field.title": "തലക്കെട്ട്",
+    "field.topics": "പാഠഭാഗങ്ങൾ",
+    "field.summary": "ചുരുക്കം",
+    "field.method": "രീതി",
+    "field.assignments.homework": "ഗൃഹപാഠം",
+    "field.assignments.assignment": "അസൈൻമെന്റ്",
+    "field.next": "അടുത്ത ക്ലാസ്",
+    "field.materials": "പഠനോപകരണങ്ങൾ",
+    "kind.period": "പീരിയഡ്",
+    "kind.lecture": "ലെക്ചർ",
+    "kind.lab": "ലാബ്",
+    "kind.tutorial": "ട്യൂട്ടോറിയൽ",
+    "kind.batch": "ബാച്ച്",
+    "kind.workshop": "വർക്ക്ഷോപ്പ്",
+    "kind.other": "സെഷൻ",
+    "role.headmaster": "പ്രധാനാധ്യാപകർ",
+    "role.principal": "പ്രിൻസിപ്പൽ",
+    "role.hod": "വകുപ്പ് മേധാവി",
+    "role.owner": "ഉടമ",
+    "role.supervisor": "സൂപ്പർവൈസർ"
+  }
+}

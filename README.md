@@ -34,6 +34,8 @@ photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  
 | [`spec/schema/tdx-2.0.schema.json`](spec/schema/tdx-2.0.schema.json) | Normative JSON Schema (2020-12) |
 | `src/tdx/` | Reference implementation: canonical form, signing, chain, verification, seals, schema validator |
 | `src/engine/` | Record Engine: capability router, Meta provider (SAM 3.1, Muse Voice Transcribe, Muse Spark), host-supplied fallback, locate → listen → read → check → score |
+| [`packs/`](packs/README.md) | Locale (en, ml, te, hi, pt-BR, id, fr), institution, country (IN, BR, ID, FR, SN) and policy packs |
+| `src/packs/` | Pack loader, `t()` with plurals, field labels per institution, `describe()` for engine results |
 | `test/` | Tests (`npm test`) — Meta API mocked with the shapes in `docs/meta-model-api-notes.md` |
 | `scripts/engine-live.js` | Live run on synthetic evidence (Actions → *Engine live run*, needs `META_API_KEY`) |
 
@@ -79,6 +81,8 @@ const { capsule, routing, transcripts } = await engine.process({
 | read | `structure` | Muse Spark, strict JSON schema, per-field confidence | fallback provider |
 | check | `verify` | Muse Spark, second pass: each field supported / unsupported / contradicted | record cannot be auto-locked |
 | score | — | field classes (critical / material / soft) × policy | — |
+
+Institution, country and policy packs shape every run: the vocabulary the model is given, which fields are critical (a university's course, a school's class), the time zone and record language when the channel does not send them, the confidence thresholds, and how late a capture may be. `packs.describe(result)` turns the outcome into one sentence in the educator's language (e.g. Malayalam: "രേഖപ്പെടുത്തി. ഒപ്പിടാൻ തയ്യാർ.").
 
 Providers are tried in order and skipped when they lack the capability, cannot take the input, are not allowed for this educator (`allow_providers`, for consent) or have hit their daily limit; errors and timeouts fall through. If nothing usable was read or heard, no model is asked to invent a record — the draft is held.
 

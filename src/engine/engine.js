@@ -17,10 +17,9 @@ const tdx = require('../tdx');
 const media = require('./media');
 const P = require('./prompts');
 const { route } = require('./score');
+const packs = require('../packs');
 
 const PIPELINE_VERSION = 'core-0.2';
-const DEFAULT_KIND = { school: 'period', college: 'lecture', university: 'lecture', academy: 'batch', training: 'workshop', independent: 'other' };
-const LANG_NAMES = { en: 'English', hi: 'Hindi', te: 'Telugu', ml: 'Malayalam', ta: 'Tamil', pt: 'Portuguese', id: 'Indonesian', fr: 'French', es: 'Spanish' };
 
 const isImage = e => /^image\//.test(e.media_type);
 const isAudio = e => /^audio\//.test(e.media_type);
@@ -49,6 +48,8 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
    */
   async function processEvidence({ evidence = [], text = [], context }) {
     const ctx = normalizeContext(context);
+    const pol = typeof (ctx.policy || policy) === 'string' ? packs.policy(ctx.policy || policy) : (ctx.policy || policy);
+    const inst = packs.institution(ctx.institution_type);
     const allow = ctx.allow_providers;
     const texts = [].concat(text || []).map(t => String(t).trim()).filter(Boolean);
     const items = evidence.map(e => ({ ...e, bytes: Buffer.from(e.bytes), id: tdx.sha256(Buffer.from(e.bytes)) }));
@@ -57,7 +58,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
     // ── locate + listen, in parallel ──────────────────────────────────────────────
     const locate = items.filter(isImage).map(async img => {
       let best = null;
-      for (const query of boardQueries) {
+      for (const query of pol.steps?.locate === false ? [] : boardQueries) {
         try {
           const r = await router.run('segment', { image: img, query }, { allow, step: 'locate', evidence: img.id });
           steps.push(r.step);
@@ -109,7 +110,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
     });
     const known = { label: ctx.session.label, cohort: ctx.session.cohort, subject: ctx.session.subject, course: ctx.session.course };
     const evText = P.evidenceText({ date: ctx.date, label: ctx.session.label, known, usual: ctx.usual, texts, transcripts, imageNotes });
-    const pctx = { institutionType: ctx.institution_type, recordLanguage: LANG_NAMES[primary(ctx.record_locale)] || ctx.record_locale };
+    const pctx = { institutionType: ctx.institution_type, recordLanguage: languageName(ctx.record_locale) };
 
     // Nothing usable (e.g. the only voice note could not be transcribed): no model is asked
     // to invent a record from nothing — the draft is held for the educator.
@@ -128,7 +129,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
     const flags = [];
     let checkRan = false;
     const draftView = JSON.stringify({ session: rec.session, content: rec.content });
-    if (usable) try {
+    if (usable && pol.steps?.check !== false) try {
       const chk = await router.run('verify', { instructions: P.checkPrompt(pctx), text: `${evText}\n\nDraft record:\n${draftView}`, images, schema: P.CHECK_SCHEMA, schemaName: 'tdx_check' }, { allow, step: 'check' });
       steps.push(chk.step);
       checkRan = true;
@@ -146,17 +147,17 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
       ...Object.fromEntries(['label', 'cohort', 'subject', 'course', 'unit'].map(k => [`session.${k}`, rec.session[k]])),
       ...Object.fromEntries(Object.entries(rec.content).map(([k, v]) => [`content.${k}`, v])),
     };
-    const routing = route({ values, confidence: rec.confidence, flags, relevant: rec.relevant, usable: !!usable, checkRan, institutionType: ctx.institution_type, policy: ctx.policy || policy });
+    const capturedAt = ctx.captured_at || now().toISOString();
+    const routing = route({ values, confidence: rec.confidence, flags, relevant: rec.relevant, usable: !!usable, checkRan, lagDays: lagDays(ctx.date, capturedAt, ctx.timezone), institutionType: ctx.institution_type, policy: pol });
     const field_confidence = Object.fromEntries(Object.entries(rec.confidence).filter(([f]) => present(values[f])));
 
     // ── draft capsule ────────────────────────────────────────────────────────────
-    const capturedAt = ctx.captured_at || now().toISOString();
     const body = {
       tenant: ctx.tenant,
       actor: { educator_ref: ctx.educator_ref, institution_ref: ctx.institution_ref, institution_type: ctx.institution_type },
       locale: ctx.locale, record_locale: ctx.record_locale, country: ctx.country,
       session: {
-        kind: ctx.session.kind || rec.kind || DEFAULT_KIND[ctx.institution_type] || 'other',
+        kind: ctx.session.kind || (inst.session_kinds.includes(rec.kind) ? rec.kind : inst.default_kind),
         date: ctx.date, ...(ctx.session.starts_at ? { starts_at: ctx.session.starts_at } : {}), timezone: ctx.timezone,
         label: rec.session.label, cohort: rec.session.cohort, subject: rec.session.subject, course: rec.session.course, unit: rec.session.unit,
         ...(ctx.session.duration_min ? { duration_min: ctx.session.duration_min } : {}),
@@ -191,13 +192,20 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
   return { process: processEvidence, PIPELINE_VERSION };
 }
 
+/** Fill defaults from the country pack: its only (or default) time zone and record language. */
 function normalizeContext(c = {}) {
-  for (const k of ['tenant', 'educator_ref', 'institution_ref', 'institution_type', 'date', 'timezone']) {
+  const country = packs.country(c.country);
+  const timezone = c.timezone || country?.default_timezone || (country?.timezones?.length === 1 ? country.timezones[0] : null);
+  for (const k of ['tenant', 'educator_ref', 'institution_ref', 'institution_type', 'date']) {
     if (!c[k]) throw new Error(`engine: context.${k} is required`);
   }
+  if (!timezone) throw new Error(`engine: context.timezone is required${country ? ` (${country.name} has several)` : ''}`);
   return {
-    locale: 'en', record_locale: 'en', country: undefined, channel: 'api', usual: [], session: {},
+    locale: country?.locales?.[0] || 'en', channel: 'api', usual: [], session: {},
     ...c,
+    country: c.country ? String(c.country).toUpperCase() : undefined,
+    timezone,
+    record_locale: c.record_locale || country?.default_record_locale || 'en',
     session: { ...(c.session || {}) },
     allow_providers: c.allow_providers || undefined,
   };
@@ -227,6 +235,15 @@ function cleanRecord(o = {}, ctx) {
 const present = v => (Array.isArray(v) ? v.length > 0 : v != null);
 const fieldValue = (rec, field) => { const [g, k] = field.split('.'); return g === 'session' ? rec.session[k] : rec.content[k]; };
 const fromEducator = (field, known) => field.startsWith('session.') && !!blank(known[field.slice(8)]);
+/** English name of a language for prompts ("Portuguese (Brazil)"), from its locale pack. */
+const languageName = tag => (packs.locale(tag)?.locale.split('-')[0] === primary(tag) ? packs.locale(tag).name : tag);
+
+/** Whole days between the session date and the local date the evidence was captured. */
+function lagDays(date, capturedAt, timezone) {
+  const local = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(capturedAt));
+  return Math.round((Date.parse(local) - Date.parse(date)) / 86400000);
+}
+
 const primary = l => String(l || '').toLowerCase().split('-')[0];
 const largest = boxes => (boxes || []).reduce((b, x) => (!b || (x.x2 - x.x1) * (x.y2 - x.y1) > (b.x2 - b.x1) * (b.y2 - b.y1) ? x : b), null);
 const normBox = b => [b.x1 / b.width, b.y1 / b.height, b.x2 / b.width, b.y2 / b.height].map(x => Math.round(Math.min(1, Math.max(0, x)) * 10000) / 10000);

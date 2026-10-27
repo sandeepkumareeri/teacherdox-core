@@ -34,19 +34,12 @@ const CHECK_SCHEMA = obj({
   },
 });
 
-const VOCAB = {
-  school: 'a school teacher; sessions are periods; cohort is class and section (e.g. "8B", "10-A")',
-  college: 'a college lecturer; sessions are lectures or labs; cohort is year/section; course is the paper or course code',
-  university: 'a university lecturer or professor; sessions are lectures, labs or tutorials; course is the course code and name (e.g. "CS201 Data Structures"); cohort is the year group or section if stated',
-  academy: 'a tutor or coaching-centre educator; sessions are batches or tutorials; cohort is the batch name',
-  training: 'a corporate or vocational trainer; sessions are workshops; course is the programme; unit is the module',
-  independent: 'an independent educator; sessions may be any kind',
-};
+const packs = require('../packs');
 
 function readPrompt(ctx) {
   return [
     'You turn raw classroom evidence into one structured teaching record (the .tdx record body).',
-    `The educator is ${VOCAB[ctx.institutionType] || VOCAB.independent}.`,
+    `The educator is ${packs.institution(ctx.institutionType).model_vocabulary}.`,
     `Write every text field in ${ctx.recordLanguage}, whatever language the evidence is in. Keep codes, formulas and exercise numbers exactly as written.`,
     'Rules:',
     '- subject is the discipline (e.g. "Mathematics", "Physics", "English"), never the chapter. The chapter, unit or topic heading goes in unit (e.g. subject "Mathematics", unit "Fractions").',

@@ -8,8 +8,7 @@
 //   hold      — not usable as a record without attention (irrelevant evidence, a critical
 //               field contradicted or far too unsure)
 //
-// Field classes and policies are inlined here as defaults; packs (packs/institutions,
-// packs/policies) override them.
+// Base field classes are the spec's (§4); institution and policy packs adjust them.
 
 const BASE_CLASSES = {
   'session.subject': 'critical',
@@ -17,23 +16,14 @@ const BASE_CLASSES = {
   'content.assignments': 'material', 'content.topics': 'material',
   'content.title': 'soft', 'content.summary': 'soft', 'content.method': 'soft', 'content.next': 'soft', 'content.materials': 'soft', 'content.notes': 'soft',
 };
-// Institution types promote fields (spec §4: e.g. session.course is critical for universities).
-const PROMOTIONS = {
-  school: { 'session.cohort': 'critical' },
-  academy: { 'session.cohort': 'critical' },
-  college: { 'session.course': 'critical' },
-  university: { 'session.course': 'critical' },
-};
-
-const POLICIES = {
-  personal:          { version: '1', min: { critical: 0.75, material: 0.5, soft: 0 }, hold_below: { critical: 0.2 }, require_check: false },
-  school_compliance: { version: '1', min: { critical: 0.9, material: 0.75, soft: 0 }, hold_below: { critical: 0.4 }, require_check: true },
-  government_audit:  { version: '1', min: { critical: 0.95, material: 0.85, soft: 0.5 }, hold_below: { critical: 0.5 }, require_check: true },
-};
+// Institution packs promote fields (spec §4: e.g. session.course is critical for
+// universities); policy packs set the thresholds. See packs/.
+const packs = require('../packs');
+const POLICIES = Object.fromEntries(packs.list('policies').map(n => [n, packs.policy(n)]));
 const WEIGHT = { critical: 3, material: 2, soft: 1 };
 
 function fieldClasses(institutionType, overrides = {}) {
-  return { ...BASE_CLASSES, ...(PROMOTIONS[institutionType] || {}), ...overrides };
+  return { ...BASE_CLASSES, ...(packs.institution(institutionType)?.promotions || {}), ...overrides };
 }
 
 const present = v => Array.isArray(v) ? v.length > 0 : v != null && v !== '';
@@ -44,8 +34,8 @@ const present = v => Array.isArray(v) ? v.length > 0 : v != null && v !== '';
  * flags: [{ field, issue }] from the check step
  * → { decision, overall_confidence, auto_accepted_fields, confirm_fields, reasons, policy_profile, policy_version }
  */
-function route({ values, confidence, flags = [], relevant = true, usable = true, checkRan = false, institutionType, policy = 'school_compliance', classes }) {
-  const P = typeof policy === 'string' ? { name: policy, ...POLICIES[policy] } : policy;
+function route({ values, confidence, flags = [], relevant = true, usable = true, checkRan = false, lagDays = 0, institutionType, policy = 'school_compliance', classes }) {
+  const P = typeof policy === 'string' ? packs.policy(policy) : policy;
   if (!P || !P.min) throw new Error(`unknown policy ${policy}`);
   const cls = classes || fieldClasses(institutionType);
   const auto = [], confirm = [], reasons = [];
@@ -74,14 +64,20 @@ function route({ values, confidence, flags = [], relevant = true, usable = true,
     }
   }
   if (P.require_check && !checkRan) reasons.push('verification step did not run');
+  const late = P.max_capture_lag_days != null && lagDays > P.max_capture_lag_days;
+  if (late) reasons.push(`captured ${lagDays} days after the session (policy allows ${P.max_capture_lag_days})`);
+  if (P.allow_auto_lock === false) reasons.push('policy requires a person to confirm every record');
 
-  const decision = hold ? 'hold' : (confirm.length || (P.require_check && !checkRan)) ? 'confirm' : 'auto_lock';
+  const decision = hold ? 'hold'
+    : (confirm.length || (P.require_check && !checkRan) || late || P.allow_auto_lock === false) ? 'confirm' : 'auto_lock';
   return {
     decision,
+    late_days: late ? lagDays : 0,
+    require_approval: !!P.require_approval,
     overall_confidence: wsum ? Math.round((csum / wsum) * 1000) / 1000 : null,
     policy_profile: P.name || 'custom', policy_version: P.version || '1',
     auto_accepted_fields: auto, confirm_fields: [...new Set(confirm)], reasons,
   };
 }
 
-module.exports = { route, fieldClasses, POLICIES, BASE_CLASSES, PROMOTIONS };
+module.exports = { route, fieldClasses, POLICIES, BASE_CLASSES };

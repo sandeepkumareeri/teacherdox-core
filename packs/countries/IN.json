@@ -1,0 +1,31 @@
+{
+  "country": "IN",
+  "name": "India",
+  "timezones": [
+    "Asia/Kolkata"
+  ],
+  "default_timezone": "Asia/Kolkata",
+  "locales": [
+    "en",
+    "hi",
+    "te",
+    "ml",
+    "ta",
+    "kn",
+    "mr",
+    "bn"
+  ],
+  "default_record_locale": "en",
+  "approver_hierarchy": [
+    "headmaster",
+    "block or mandal education officer",
+    "district education officer"
+  ],
+  "academic_year_start_month": 6,
+  "academic_year_note": "June in most state boards (e.g. Kerala, Andhra Pradesh); April in CBSE schools",
+  "curriculum_frameworks": [
+    "NCERT",
+    "SCERT (state)"
+  ],
+  "data_residency": "IN"
+}

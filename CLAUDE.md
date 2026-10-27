@@ -46,8 +46,17 @@ Done:
   promotions, policies `personal|school_compliance|government_audit` → `auto_lock|confirm|hold`),
   `engine.js` (locate ∥ listen → read → check → score → schema-valid draft capsule; transcripts and
   crops returned beside the capsule, never inside it).
-- Tests: 32 passing (`test/tdx.test.js`, `test/schema.test.js`, `test/engine.test.js` with the Meta
-  API mocked per the notes; ffmpeg tests skip without ffmpeg).
+- `packs/` + `src/packs/` (see `packs/README.md`): locales en, ml, te, hi, pt-BR, id, fr (non-English
+  marked `review: draft translation` until a native speaker checks them); institutions for all six
+  `institution_type`s (session kinds, field terms, promotions, approver, model vocabulary); countries
+  IN, BR, ID, FR, SN (time zones, record language, approver hierarchy, calendar); policies personal,
+  school_compliance, government_audit, low_connectivity (thresholds, steps, max capture lag, auto-lock,
+  approval). The engine takes promotions/vocabulary/kinds from institution packs, time zone and record
+  language defaults from country packs, thresholds/steps/lag/auto-lock from policy packs.
+  `packs.describe(result)` = one educator-facing sentence per outcome.
+- Tests: 42 passing (`test/tdx.test.js`, `test/schema.test.js`, `test/engine.test.js`,
+  `test/packs.test.js`; shared mocks in `test/helpers.js` — the Meta API mocked per the notes;
+  ffmpeg tests skip without ffmpeg).
 - `scripts/engine-live.js` + `.github/workflows/engine-live.yml`: live run on synthetic evidence
   (board fixture + espeak-ng OGG voice notes in en/hi/te/ml/pt). **Not yet run** — needs the
   `META_API_KEY` secret on this repo (optional `GEMINI_API_KEY` secret + `GEMINI_MODEL` variable).
@@ -61,9 +70,7 @@ Muse Spark per-token price (cost is recorded as `null` until known; ASR uses $0.
 Next, in order:
 1. Run *Engine live run* in Actions; fix anything the real API disagrees with; record results in
    `docs/meta-model-api-notes.md`.
-2. Packs `packs/`: locales (en, ml, te, hi, pt-BR, id, fr), institutions (school, university, academy,
-   training — move `score.js` PROMOTIONS and prompts.js VOCAB there), countries (IN, BR, ID, FR/SN…),
-   policies (personal, school_compliance, government_audit, low_connectivity — move `score.js` POLICIES).
+2. Native-speaker review of the ml / te / hi / pt-BR / id / fr packs (ask Sandeep).
 3. REST API `src/api/` (Node http, no framework needed) + public verifier page + `bin/tdx` CLI
    (`tdx verify file.json --keys keys.json`).
 4. Queue-based processing + cost/latency telemetry.
