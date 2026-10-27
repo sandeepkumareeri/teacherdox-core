@@ -48,9 +48,10 @@ bar are listed under "Missing"):
   implementation, identical reports), `verifier/` public page, `bin/tdx` (verify, validate, hash,
   keygen, process, serve). Docs: `docs/api.md`, `packs/README.md`.
 - Tests: `npm test` (tdx, schema, vectors, engine, packs, verifier, api, queue).
-- Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) and
-  `engine-live.yml` (all languages). Need the `META_API_KEY` secret on this repo. The sandbox cannot
-  reach api.meta.ai.
+- Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) — **first
+  live run succeeded 27 Oct** (SAM box exact, read correct, check flagged the inferred subject → confirm;
+  12.4 s; see `docs/meta-model-api-notes.md`). `engine-live.yml` (all languages) not yet run.
+  `META_API_KEY` is set on this repo. The sandbox cannot reach api.meta.ai.
 
 Missing against the quality bar: API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
 CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; `eval/`; CI + CodeQL; SECURITY /

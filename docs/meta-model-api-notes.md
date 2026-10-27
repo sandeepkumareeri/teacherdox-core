@@ -46,3 +46,23 @@ Verified with real calls by the `Meta probe` workflow in the private TeacherDox 
 ## Account notes
 - The account runs on hackathon free credits; Meta's billing page says content sent while using free
   credits may be used for product improvement → only demo/test data or consenting educators.
+
+## Record Engine, first live run (27 Oct 2026, 10:39 UTC)
+
+`Photo pipeline live` run [40489280886](https://github.com/sandeepkumareeri/teacherdox-core/actions/runs/40489280886)
+(attempt 2), synthetic board `test/fixtures/board-synthetic.jpg`, Meta only, no fallback. The request and
+response shapes in this file worked unchanged in the engine (`/responses` for SAM, `/chat/completions` with a
+strict JSON schema and `reasoning_effort: "low"` for Muse Spark, instructions in the user turn).
+
+| Step | Model | ms | Tokens in / out | Result |
+|---|---|---|---|---|
+| locate | sam-3.1 | 3181 | — | box [0.1117, 0.1292, 0.8883, 0.7875] (drawn board ≈ [0.109, 0.125, 0.891, 0.792]); crop 43,718 bytes |
+| read | muse-spark-1.3 | 4241 | 1274 / 1267 | cohort 8B · subject Mathematics · unit Fractions · "Adding fractions with unlike denominators" · HW "Ex 3.2 Q1-5" |
+| check | muse-spark-1.3 | 4954 | 1233 / 1171 | `session.subject` **unsupported**: "Board shows fractions but no subject word." |
+
+Total 12.4 s. Subject and unit came back separated (the probe's "Fractions as subject" problem is fixed by the
+prompt). The check step capped `session.subject` at 0.5 because the board never names the subject — it was
+inferred — so the record was routed to **confirm** ("Recorded. Please check: subject.") instead of being
+auto-locked. That is the intended behaviour: an inferred critical field goes to the educator. In the product the
+subject usually comes from the educator's timetable (`context.session.subject` / `usual`), which the engine then
+treats as known. Completion tokens include reasoning; cost stays `null` until Muse Spark's price is published.
