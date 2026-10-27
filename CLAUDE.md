@@ -47,14 +47,25 @@ bar are listed under "Missing"):
   seal, proofs, export; public verify; telemetry), `src/verifier/` (reference + WebCrypto
   implementation, identical reports), `verifier/` public page, `bin/tdx` (verify, validate, hash,
   keygen, process, serve). Docs: `docs/api.md`, `packs/README.md`.
-- Tests: `npm test` (tdx, schema, vectors, engine, packs, verifier, api, queue).
+- Tests: `npm test` — 83 (tdx, schema, vectors, engine, packs, verifier, api, queue, baseten, eval).
 - Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) — **first
   live run succeeded 27 Oct** (SAM box exact, read correct, check flagged the inferred subject → confirm;
-  12.4 s; see `docs/meta-model-api-notes.md`). `engine-live.yml` (all languages) not yet run.
-  `META_API_KEY` is set on this repo. The sandbox cannot reach api.meta.ai.
+  12.4 s; see `docs/meta-model-api-notes.md`). **Since ~11:49 UTC the repo's `META_API_KEY` has no model
+  access** (404 model_not_found; `GET /v1/models` empty) — ask Sandeep for a working key.
+  `engine-live.yml` (all languages) not yet run. The sandbox cannot reach api.meta.ai or baseten.co.
+- `src/engine/providers/baseten.js`: Muse Spark Open (Meta open weights) on Baseten,
+  `meta-models/muse-spark-open-1026`, third in the provider order (Meta API → Baseten → host fallback).
+  Facts in `docs/meta-model-api-notes.md` (from docs fetched by `baseten-docs.yml` and the live
+  `baseten-probe.yml`): always reasons, schema not enforced server-side (validated here), images/audio
+  as data URLs (`audio_url`), $1.25/$4.25 per 1M tokens. Audio input inconsistent → transcription off by
+  default (`transcribeLanguages: []`), Malayalam not routed to it.
+- `eval/`: cases (12 synthetic boards rendered in CI, 8 espeak voice notes), `score.js` (rules pinned by
+  `test/eval.test.js`), `run.js` (meta / baseten / gemini, no cross-provider fallback, API-failed configs
+  marked not comparable), `.github/workflows/eval.yml`, `eval/RESULTS.md` (first real results:
+  Muse Spark Open 98% on boards; Meta not comparable — key; Gemini not run — no key).
 
-Missing against the quality bar: API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
-CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; `eval/`; CI + CodeQL; SECURITY /
+Missing against the quality bar: Meta + Gemini columns in `eval/RESULTS.md` (need keys); API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
+CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; CI + CodeQL; SECURITY /
 CONTRIBUTING / CODE_OF_CONDUCT / CHANGELOG; quickstart + how-a-record-is-born + Mermaid diagrams;
 README rewrite; verifier page in brand style (#1B5E3B, DM Sans/Mono); tag v0.1.0.
 
