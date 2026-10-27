@@ -89,7 +89,7 @@ Packs (configuration): locales/ · institutions/ · countries/ · policies/
 
 ### 4.2 Record Engine
 - **Agentic pipeline** of small, single-purpose steps (locate, listen, read, check, score). Each step is a model call with a typed input/output, logged with model id, latency, cost and confidence.
-- **Model router.** Each step names a capability (`segment`, `transcribe`, `structure`, `verify`), not a model. The router maps capabilities to providers in priority order (Meta Model API → Meta open weights via a partner → fallback provider), retries, and falls back on error, timeout or budget limit. The chosen provider is written into the record's provenance.
+- **Model router.** Each step names a capability (`segment`, `transcribe`, `structure`, `check`), not a model. The router maps capabilities to providers in priority order (Meta Model API → Meta open weights via a partner → fallback provider), retries, and falls back on error, timeout or budget limit. The chosen provider is written into the record's provenance.
 - **Output** is a `.tdx` 2.0 body in `draft`, with per-field confidence and evidence links.
 
 ### 4.3 Trust layer

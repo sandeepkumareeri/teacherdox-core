@@ -88,7 +88,7 @@
       { "step": "locate", "capability": "segment",    "provider": "meta", "model": "sam-3.1",              "ms": 820,  "cost_usd": 0.0004 },
       { "step": "listen", "capability": "transcribe", "provider": "meta", "model": "muse-voice-transcribe", "ms": 1640, "cost_usd": 0.0010 },
       { "step": "read",   "capability": "structure",  "provider": "meta", "model": "muse-spark",            "ms": 3100, "cost_usd": 0.0021 },
-      { "step": "check",  "capability": "verify",     "provider": "meta", "model": "muse-spark",            "ms": 1200, "cost_usd": 0.0008 }
+      { "step": "check",  "capability": "check",      "provider": "meta", "model": "muse-spark",            "ms": 1200, "cost_usd": 0.0008 }
     ],
     "fallback_used": false,
     "overall_confidence": 0.91,
@@ -127,7 +127,7 @@ The schema allows unknown members everywhere (consumers MUST ignore them within 
 
 ## 7. Provenance step fields
 
-Each `provenance.steps[]` item has `step` (`locate | listen | read | check | score`), `capability` (`segment | transcribe | structure | verify | score`) and `provider`, and MAY carry `model`, `status` (`ok | fallback | skipped | failed`), `ms`, `cost_usd` (`null` when the provider's price is unknown — never estimated), `tokens { input, output }`, `evidence` (the evidence hash the step worked on) and `attempts[]` (each provider tried before the one that answered, with its error). `provenance` MAY also carry `flags[]` (fields the check step found contradicted or unsupported by the evidence) and `routing` (the confidence-routing decision: `auto_lock | confirm | hold`, the policy used, and which fields were auto-accepted or need confirmation).
+Each `provenance.steps[]` item has `step` (`locate | listen | read | check | score`), `capability` (`segment | transcribe | structure | check | score`) and `provider`, and MAY carry `model`, `status` (`ok | fallback | skipped | failed`), `ms`, `cost_usd` (`null` when the provider's price is unknown — never estimated), `tokens { input, output }`, `evidence` (the evidence hash the step worked on) and `attempts[]` (each provider tried before the one that answered, with its error). `provenance` MAY also carry `flags[]` (fields the check step found contradicted or unsupported by the evidence) and `routing` (the confidence-routing decision: `auto_lock | confirm | hold`, the policy used, and which fields were auto-accepted or need confirmation).
 
 ## 8. Countersignatures
 

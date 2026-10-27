@@ -221,7 +221,7 @@ module.exports = {
             "required": ["step", "capability", "provider"],
             "properties": {
               "step": { "$ref": "#/$defs/stepName" },
-              "capability": { "enum": ["segment", "transcribe", "structure", "verify", "score"] },
+              "capability": { "enum": ["segment", "transcribe", "structure", "check", "score"] },
               "provider": { "type": "string" },
               "model": { "type": ["string", "null"] },
               "status": { "enum": ["ok", "fallback", "skipped", "failed"] },

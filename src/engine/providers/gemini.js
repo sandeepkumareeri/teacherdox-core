@@ -4,7 +4,7 @@
 // daily limits and can route to Vertex. The core never talks to Google itself and never
 // names a Gemini model: it only shapes generateContent requests and reads the response.
 //
-//   fromGenerate(generate, { name = 'gemini' }) → provider with transcribe, structure, verify
+//   fromGenerate(generate, { name = 'gemini' }) → provider with transcribe, structure, check
 //
 // No `segment`: without a segmentation model the locate step is skipped and the whole
 // photo is read.
@@ -53,7 +53,7 @@ function fromGenerate(generate, { name = 'gemini', timeoutMs } = {}) {
 
   return {
     name,
-    capabilities: ['transcribe', 'structure', 'verify'],
+    capabilities: ['transcribe', 'structure', 'check'],
     async transcribe({ audio, language }, { signal } = {}) {
       const l = String(language || '').toLowerCase().split('-')[0];
       const prompt = `Transcribe this voice note exactly as spoken${LANGUAGE_NAMES[l] ? ` (most likely in ${LANGUAGE_NAMES[l]})` : ''}. Keep the original language and script; do not translate or summarise. Return the transcript and the ISO 639-1 code of the language spoken.`;
@@ -64,7 +64,7 @@ function fromGenerate(generate, { name = 'gemini', timeoutMs } = {}) {
     async structure({ instructions, text, images = [], schema }, { signal } = {}) {
       return call([{ text: `${instructions}\n\n${text}` }, ...images.map(part)], schema, signal);
     },
-    async verify({ instructions, text, images = [], schema }, { signal } = {}) {
+    async check({ instructions, text, images = [], schema }, { signal } = {}) {
       return call([{ text: `${instructions}\n\n${text}` }, ...images.map(part)], schema, signal);
     },
   };

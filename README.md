@@ -83,7 +83,7 @@ const { capsule, routing, transcripts } = await engine.process({
 | locate | `segment` | SAM 3.1 — finds the board; ffmpeg crops to it | whole photo is read |
 | listen | `transcribe` | Muse Voice Transcribe — OGG/Opus → 16 kHz WAV via ffmpeg | fallback provider (always for Malayalam, which Meta does not support) |
 | read | `structure` | Muse Spark, strict JSON schema, per-field confidence | fallback provider |
-| check | `verify` | Muse Spark, second pass: each field supported / unsupported / contradicted | record cannot be auto-locked |
+| check | `check` | Muse Spark, second pass: each field supported / unsupported / contradicted | record cannot be auto-locked |
 | score | — | field classes (critical / material / soft) × policy | — |
 
 Institution, country and policy packs shape every run: the vocabulary the model is given, which fields are critical (a university's course, a school's class), the time zone and record language when the channel does not send them, the confidence thresholds, and how late a capture may be. `packs.describe(result)` turns the outcome into one sentence in the educator's language (e.g. Malayalam: "രേഖപ്പെടുത്തി. ഒപ്പിടാൻ തയ്യാർ.").

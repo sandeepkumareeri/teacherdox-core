@@ -53,10 +53,10 @@ test('router: priority order, fallback on error, unsupported input, consent and 
 });
 
 test('router: a slow provider times out and the next one answers', async () => {
-  const slow = { name: 'slow', capabilities: ['verify'], verify: (_, { signal }) => new Promise((res, rej) => signal.addEventListener('abort', () => rej(new Error('aborted')))) };
-  const fast = { name: 'fast', capabilities: ['verify'], verify: async () => ({ output: 1 }) };
+  const slow = { name: 'slow', capabilities: ['check'], check: (_, { signal }) => new Promise((res, rej) => signal.addEventListener('abort', () => rej(new Error('aborted')))) };
+  const fast = { name: 'fast', capabilities: ['check'], check: async () => ({ output: 1 }) };
   const r = E.createRouter({ providers: [slow, fast], timeoutMs: 30 });
-  const { step } = await r.run('verify', {});
+  const { step } = await r.run('check', {});
   assert.equal(step.provider, 'fast');
   assert.match(step.attempts[0].error, /timed out/);
 });

@@ -4,7 +4,7 @@
       "kid": "k_demo_sample",
       "kty": "OKP",
       "crv": "Ed25519",
-      "x": "KxUDfAoKTp6CrzQMhLXb3_WWVbzq4gbD3OTEVA3NSGg",
+      "x": "pLengZv_ne4wfcMH3sDbX6Dv8hU1LdE7rAUhchfyTA0",
       "alg": "ed25519",
       "valid_from": "2026-10-01T00:00:00Z",
       "valid_to": null,

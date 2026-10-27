@@ -9,7 +9,7 @@
 // A provider is { name, capabilities: [...], supports?(capability, input) → true | "reason",
 //   async [capability](input, { signal }) → { output, model, usage?: { input, output }, cost_usd? } }
 
-const CAPABILITIES = ['segment', 'transcribe', 'structure', 'verify'];
+const CAPABILITIES = ['segment', 'transcribe', 'structure', 'check'];
 
 class RouterError extends Error {
   constructor(capability, attempts) {

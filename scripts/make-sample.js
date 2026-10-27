@@ -15,7 +15,7 @@ const key = tdx.generateKey('k_demo_sample', { validFrom: '2026-10-01T00:00:00Z'
 const DATE = '2026-10-28';
 
 const step = (s, capability, model) => ({ step: s, capability, provider: 'meta', model, status: 'ok' });
-const STEPS = [step('locate', 'segment', 'sam-3.1'), step('listen', 'transcribe', 'muse-voice-transcribe-1.0'), step('read', 'structure', 'muse-spark-1.3'), step('check', 'verify', 'muse-spark-1.3')];
+const STEPS = [step('locate', 'segment', 'sam-3.1'), step('listen', 'transcribe', 'muse-voice-transcribe-1.0'), step('read', 'structure', 'muse-spark-1.3'), step('check', 'check', 'muse-spark-1.3')];
 
 const periods = [
   { label: 'P2', cohort: '8B', subject: 'Mathematics', unit: 'Fractions', title: 'Adding fractions with unlike denominators', topics: ['Fractions', 'LCM'], hw: 'Ex 3.2 Q1-5', at: '04:52:05' },

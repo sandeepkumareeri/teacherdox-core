@@ -6,7 +6,7 @@
 //   segment    → SAM 3.1 via POST /responses (box parsed from its special-token text)
 //   transcribe → Muse Voice Transcribe via POST /asr/transcribe (WAV only; no Malayalam)
 //   structure  → Muse Spark via POST /chat/completions with a strict JSON schema
-//   verify     → same as structure, with the check prompt
+//   check      → same as structure, with the check prompt
 //
 // Never configure the "-contributor" models here: Meta may train on their prompts.
 
@@ -123,7 +123,7 @@ function createMetaProvider({
   return {
     name: 'meta',
     models: m,
-    capabilities: ['segment', 'transcribe', 'structure', 'verify'],
+    capabilities: ['segment', 'transcribe', 'structure', 'check'],
     supports(capability, input) {
       if (!apiKey) return 'META_API_KEY is not set';
       if (capability === 'transcribe') {
@@ -133,7 +133,7 @@ function createMetaProvider({
       }
       return true;
     },
-    segment, transcribe, structure: json, verify: json,
+    segment, transcribe, structure: json, check: json,
   };
 }
 

@@ -4,7 +4,7 @@
 //   locate  (segment)    each photo: find the board, crop to it
 //   listen  (transcribe) each voice note → text, in the educator's language
 //   read    (structure)  crops + transcripts + text + context → record fields with confidence
-//   check   (verify)     a second pass cross-examines each field against the evidence
+//   check   (check)      a second pass cross-examines each field against the evidence
 //   score                field classes × policy → auto_lock | confirm | hold
 //
 // Every model call goes through the capability router, so each step records which
@@ -131,7 +131,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
     let checkRan = false;
     const draftView = JSON.stringify({ session: rec.session, content: rec.content });
     if (usable && pol.steps?.check !== false) try {
-      const chk = await router.run('verify', { instructions: P.checkPrompt(pctx), text: `${evText}\n\nDraft record:\n${draftView}`, images, schema: P.CHECK_SCHEMA, schemaName: 'tdx_check' }, { allow, step: 'check' });
+      const chk = await router.run('check', { instructions: P.checkPrompt(pctx), text: `${evText}\n\nDraft record:\n${draftView}`, images, schema: P.CHECK_SCHEMA, schemaName: 'tdx_check' }, { allow, step: 'check' });
       steps.push(chk.step);
       checkRan = true;
       for (const c of chk.output.checks || []) {
@@ -140,7 +140,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
         else if (c.verdict === 'unsupported') { rec.confidence[c.field] = Math.min(rec.confidence[c.field], 0.5); flags.push({ field: c.field, issue: 'unsupported', detail: String(c.detail || '').slice(0, 200) }); }
       }
     } catch (e) {
-      steps.push(failedStep('check', 'verify', e));
+      steps.push(failedStep('check', 'check', e));
     }
 
     // ── score ────────────────────────────────────────────────────────────────────
