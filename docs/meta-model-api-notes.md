@@ -66,3 +66,36 @@ inferred — so the record was routed to **confirm** ("Recorded. Please check: s
 auto-locked. That is the intended behaviour: an inferred critical field goes to the educator. In the product the
 subject usually comes from the educator's timetable (`context.session.subject` / `usual`), which the engine then
 treats as known. Completion tokens include reasoning; cost stays `null` until Muse Spark's price is published.
+
+## Muse Spark Open on Baseten (27 Oct 2026)
+
+Meta's open-weight model, served by Baseten. Read from Baseten's docs (Model APIs overview, reasoning, vision,
+audio, structured outputs, pricing, LLM OpenAPI spec — fetched by the `Baseten docs` workflow, because the
+development sandbox cannot reach baseten.co) and observed live by the `Baseten probe` workflow (synthetic data).
+
+**From the docs**
+- `POST https://inference.baseten.co/v1/chat/completions`, `Authorization: Bearer <BASETEN_API_KEY>`, OpenAI-compatible.
+  Hackathon model id **`meta-models/muse-spark-open-1026`** (the docs list `meta-models/muse-spark-open`).
+- Always reasons. `reasoning_effort`: `low | medium | high | xhigh` (default `xhigh`; `none`/`minimal` run at `low`).
+  `max_tokens` defaults to 4096 and reasoning counts against it.
+- Images: `{type:"image_url", image_url:{url}}` (HTTPS or `data:`), JPEG/PNG/WebP/GIF/BMP/TIFF, ≤ 8 per request, ≤ 10 MB each.
+- Audio: **`{type:"audio_url", audio_url:{url}}`** (HTTPS or `data:`); WAV, MP3, FLAC, OGG (Vorbis/Opus), M4A/AAC;
+  8–48 kHz; ≤ 4 files, 25 MB and 5 minutes each. Audio is billed as input tokens.
+- Structured outputs: Muse Spark Open "accepts `json_schema` but doesn't enforce the schema"; no JSON mode.
+  `n > 1` → HTTP 400; `logprobs` ignored; `seed` / `temperature: 0` not reproducible.
+- Price (baseten.co/pricing): **$1.25 input, $0.15 cached input, $4.25 output per 1M tokens**.
+
+**Observed**
+- Response: `choices[0].message.{content, role, reasoning_content}`; usage has
+  `completion_tokens_details.reasoning_tokens` and `prompt_tokens_details.cached_tokens`. System role works.
+- Text: "Reply with exactly: TeacherDox OK" → `TeacherDox OK`, 0.8–1.7 s. `reasoning_effort: "low"`: 17 × 23 → `391`, 0.7–0.9 s.
+- Board image + schema → cohort 8B · Mathematics · Fractions · HW "Ex 3.2 Q1-5" in 6.4–6.9 s (~1,700 prompt tokens),
+  but the JSON was loose: values wrapped in `**…**`, confidence `99` instead of 0–1, once fenced. Hence: schema
+  stated in the prompt, every reply parsed and validated, a mismatch is an error (→ fallback).
+- Text-only extraction with a schema once returned `assignments: []` and `confidence: 0` although the homework was in the text.
+- Audio (first probe, plain prompt asking for `TRANSCRIPT / ENGLISH / LANGUAGE` lines): synthetic **English** WAV was
+  understood (English rendering correct, though the "transcript" came back labelled German, or in Cyrillic, 9–13 s);
+  `input_audio` with OGG → HTTP 400 (`audio_url` is the documented part). Synthetic **Malayalam** WAV: "I don't see an
+  audio file attached" — not heard.
+- Audio with `response_format: json_schema` (second probe): **every** voice note — en/hi/te/ml, OGG and WAV — came back
+  "no speech". So the engine asks for labelled lines without a schema for transcription.
