@@ -69,8 +69,17 @@ Done:
   (public page at `/verify/`, verifies in the browser, sample + "change one homework line" demo),
   `verifier/tdx-verify.js` (generated: `npm run build:verifier`; a test fails if stale),
   `verifier/samples/` (synthetic day from `npm run build:sample`, demo key's public half only).
+- `src/api/queue.js`: durable work queue — jobs in `TDX_DATA_DIR/jobs/` (atomic replace), recovered at
+  start (queued → run; running → run again; a job whose pre-assigned `entry_id` already has a draft is
+  completed from it — never two records), retry with backoff only for NO_PROVIDER/TIMEOUT/5xx/429,
+  `503 Retry-After` past `TDX_MAX_QUEUE`, finished jobs drop input, transcripts never on disk, 7-day TTL.
+  Engine takes `context.entry_id`.
+- `src/api/telemetry.js` + `GET /v1/telemetry`: per tenant/period/educator — decisions, fallback rate,
+  per step×provider×model calls/status/latency percentiles/tokens/cost (unknown prices counted, not
+  estimated), provider shares, per-record cost/time, capture-to-draft latency, queue stats. Drafts only
+  (locked copies repeat provenance).
 - `bin/tdx` CLI: `verify`, `validate`, `hash`, `keygen`, `process` (engine), `serve`.
-- Tests: 53 passing (`tdx`, `schema`, `engine`, `packs`, `verifier`, `api`; shared mocks in
+- Tests: 60 passing (`tdx`, `schema`, `engine`, `packs`, `verifier`, `api`, `queue`; shared mocks in
   `test/helpers.js` — the Meta API mocked per the notes; ffmpeg tests skip without ffmpeg).
 - `scripts/engine-live.js` + `.github/workflows/engine-live.yml`: live run on synthetic evidence
   (board fixture + espeak-ng OGG voice notes in en/hi/te/ml/pt). **Not yet run** — needs the
@@ -88,10 +97,8 @@ Next, in order:
 2. Native-speaker review of the ml / te / hi / pt-BR / id / fr packs (ask Sandeep).
 3. Deploy the API + verifier page somewhere public for the demo (decide with Sandeep: the TeacherDox
    server or a separate host; needs a real signing key and published registry).
-4. Durable queue (jobs are in memory today — lost on restart; capsules are not) + cost/latency
-   telemetry endpoint aggregated from provenance steps.
-5. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
-6. Integration into the private product as the first channel (its `gemini.js` boundary:
+4. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
+5. Integration into the private product as the first channel (its `gemini.js` boundary:
    `fromGenerate(gemini.generate)` as fallback, `allow_providers` from `META_AI_PHONES`).
 
 ## Rules

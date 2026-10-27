@@ -36,7 +36,7 @@ photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  
 | `src/engine/` | Record Engine: capability router, Meta provider (SAM 3.1, Muse Voice Transcribe, Muse Spark), host-supplied fallback, locate → listen → read → check → score |
 | [`packs/`](packs/README.md) | Locale (en, ml, te, hi, pt-BR, id, fr), institution, country (IN, BR, ID, FR, SN) and policy packs |
 | `src/packs/` | Pack loader, `t()` with plurals, field labels per institution, `describe()` for engine results |
-| `src/api/` | REST API `/v1` on `node:http` — capture, lock / confirm / amend, countersign, day seal, proofs, verify ([`docs/api.md`](docs/api.md)) |
+| `src/api/` | REST API `/v1` on `node:http` — capture, lock / confirm / amend, countersign, day seal, proofs, verify, telemetry; durable work queue ([`docs/api.md`](docs/api.md)) |
 | `src/verifier/` | Verification report for any input; a second, WebCrypto-only verifier that runs in the browser |
 | [`verifier/`](verifier/index.html) | Public verifier page (served at `/verify/`), its browser bundle and a synthetic sample day |
 | `bin/tdx` | CLI: `verify`, `validate`, `hash`, `keygen`, `process`, `serve` |
@@ -100,6 +100,8 @@ tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json
 ```
 
 The record lifecycle over HTTP: `POST /v1/records` (capture; returns at once, the engine runs in the background) → `lock` (only if the policy allows auto-lock) or `confirm` (the educator, optionally with corrections) → `amend` (a correction is a new signed record) → `countersign` (an approver) → `POST /v1/days/…/seal` → `GET /v1/days/…` (the exportable day). See [`docs/api.md`](docs/api.md).
+
+**Capture never waits for AI.** Capture writes the evidence and a job and returns; workers run the engine. Jobs are files, so a restart re-runs unfinished work without ever making a record twice (each job carries its entry id), transient model outages are retried with backoff, and a full queue answers `503 Retry-After` instead of slowing everyone down. `GET /v1/telemetry` reports cost, latency, fallback rate and routing outcomes per step, provider and model — computed from the provenance each record already carries.
 
 **Verification never needs our servers.** The verifier page at `/verify/` checks signatures, the day's hash chain, the Merkle seal and countersignatures in the browser with WebCrypto — a second implementation, independent of the reference one, and the tests require both to give identical reports. The same check runs from the command line (`tdx verify`) or as a library.
 

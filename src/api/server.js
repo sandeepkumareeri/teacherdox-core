@@ -7,6 +7,7 @@
 //
 //   POST /v1/records                          evidence + context → job (202), or the draft with ?wait=1
 //   GET  /v1/jobs/:id                         job status / result
+//   GET  /v1/telemetry?from=&to=&educator_ref=  cost, latency, fallback and routing figures from provenance
 //   GET  /v1/records?educator_ref=&date=      the educator's entries for a day
 //   GET  /v1/records/:entry_id                effective capsule, history, countersignatures, message
 //   POST /v1/records/:entry_id/lock           auto-lock a draft the policy allows to auto-lock
@@ -28,6 +29,8 @@ const path = require('node:path');
 const tdx = require('../tdx');
 const packs = require('../packs');
 const { verify, buildBrowserBundle } = require('../verifier');
+const { createQueue } = require('./queue');
+const { telemetry } = require('./telemetry');
 
 const MAX_BODY = 30 * 1024 * 1024;
 const MAX_EVIDENCE = 10;
@@ -44,13 +47,13 @@ class HttpError extends Error {
 }
 
 /**
- * createApi({ engine, store, key, registry, tokens, concurrency, now })
+ * createApi({ engine, store, key, registry, tokens, workers, maxQueue, retries, backoffMs, log })
  *   engine:   from createRecordEngine (needed only for POST /v1/records)
  *   key:      { keyId, privateKeyPem } — the custodial signing key
  *   registry: { keys: [...] } — published; must contain key's public entry
  *   tokens:   { [token]: { tenant } }
  */
-function createApi({ engine, store, key, registry, tokens = {}, concurrency = 2, log = () => {} }) {
+function createApi({ engine, store, key, registry, tokens = {}, workers = 2, maxQueue = 1000, retries = 2, backoffMs, log = () => {} }) {
   if (!store || !key || !registry) throw new Error('createApi: store, key and registry are required');
   const tokenHashes = Object.entries(tokens).map(([t, v]) => [crypto.createHash('sha256').update(t).digest(), v]);
   let bundle = null;
@@ -74,40 +77,41 @@ function createApi({ engine, store, key, registry, tokens = {}, concurrency = 2,
     return run;
   }
 
-  // ── job queue (in-process; capture returns at once, processing follows) ─────────
-  const queue = [];
-  let running = 0;
-  function pump() {
-    while (running < concurrency && queue.length) {
-      const job = queue.shift();
-      running++;
-      job.status = 'running';
-      job.started_at = new Date().toISOString();
-      processJob(job).finally(() => { running--; pump(); });
-    }
+  // ── work queue (durable with a data directory — see queue.js) ──────────────────
+  async function runJob(job) {
+    const { evidence, text, context } = job.input;
+    const ev = evidence.map(e => {
+      const bytes = store.getEvidence(e.id);
+      if (!bytes) throw new Error(`evidence ${e.id} is missing from the store`);
+      return { bytes, media_type: e.media_type, role: e.role };
+    });
+    const r = await engine.process({ evidence: ev, text, context: { ...context, entry_id: job.entry_id } });
+    store.putCapsule(r.capsule);
+    job.volatile = { transcripts: r.transcripts.map(t => ({ language: t.language, text: t.text })) };   // returned, never written to disk
+    return complete(job, r.capsule, r.routing);
   }
-  async function processJob(job) {
-    try {
-      const r = await engine.process(job.input);
-      store.putCapsule(r.capsule);
-      let capsule = r.capsule;
-      if (job.auto_lock && r.routing.decision === 'auto_lock') capsule = await lockEntry(job.tenant, capsule.body.entry_id, 'auto_locked', {});
-      Object.assign(job, {
-        status: 'done', entry_id: capsule.body.entry_id, capsule_id: capsule.capsule_id, state: capsule.body.lifecycle.state,
-        routing: r.routing, message: packs.describe(r, {}), transcripts: r.transcripts.map(t => ({ language: t.language, text: t.text })),
-        steps: r.steps.map(s => ({ step: s.step, provider: s.provider, model: s.model, status: s.status, ms: s.ms, cost_usd: s.cost_usd })),
-      });
-      log({ type: 'record', entry_id: job.entry_id, decision: r.routing.decision, steps: job.steps });
-    } catch (e) {
-      Object.assign(job, { status: 'failed', error: String(e.message || e).slice(0, 500) });
-      log({ type: 'job_failed', id: job.id, error: job.error });
-    } finally {
-      job.finished_at = new Date().toISOString();
-      delete job.input;
-      for (const w of job.waiters.splice(0)) w();
-    }
+  // The process stopped after the draft was stored: finish the job from the stored draft.
+  function resumeJob(job) {
+    const list = store.byEntry(job.entry_id);
+    return list.length ? complete(job, list[0], { confirm_fields: [], reasons: [], ...list[0].body.provenance?.routing }) : null;
   }
-  const publicJob = j => { const { input, waiters, tenant, auto_lock, ...rest } = j; return rest; };
+  async function complete(job, draft, routing) {
+    const list = store.byEntry(draft.body.entry_id);
+    let capsule = effective(list);
+    if (job.auto_lock && routing.decision === 'auto_lock' && !lockedOf(list).length) {
+      capsule = await lockEntry(job.tenant, draft.body.entry_id, 'auto_locked', {});
+    }
+    log({ type: 'record', entry_id: draft.body.entry_id, decision: routing.decision });
+    return {
+      entry_id: draft.body.entry_id, capsule_id: capsule.capsule_id, state: capsule.body.lifecycle.state, routing,
+      message: packs.describe({ routing, capsule: draft }, {}),
+      steps: draft.body.provenance.steps.map(s => ({ step: s.step, provider: s.provider, model: s.model, status: s.status, ms: s.ms, cost_usd: s.cost_usd })),
+    };
+  }
+  const publicJob = j => {
+    const { input, tenant, auto_lock, volatile, ...rest } = j;
+    return { ...rest, ...(volatile ? { transcripts: volatile.transcripts } : {}) };
+  };
 
   // ── record helpers ──────────────────────────────────────────────────────────────
   function entryCapsules(tenant, entryId) {
@@ -174,23 +178,35 @@ function createApi({ engine, store, key, registry, tokens = {}, concurrency = 2,
     }],
 
     ['POST', /^\/v1\/records$/, true, async ({ body, tenant, query }) => {
+      if (!queue) throw new HttpError(503, 'no record engine configured');
       const input = parseRecordInput(body, tenant);
-      for (const e of input.evidence) store.putEvidence(tdx.sha256(e.bytes), e.bytes, e.media_type);
-      if (!engine) throw new HttpError(503, 'no record engine configured');
-      const job = { id: tdx.uuidv7(), status: 'queued', created_at: new Date().toISOString(), tenant, input, auto_lock: !!body.auto_lock, waiters: [] };
-      store.putJob(job);
-      queue.push(job);
-      pump();
+      const evidence = input.evidence.map(e => {
+        const id = tdx.sha256(e.bytes);
+        store.putEvidence(id, e.bytes, e.media_type);
+        return { id, media_type: e.media_type, ...(e.role ? { role: String(e.role) } : {}) };
+      });
+      const job = { id: tdx.uuidv7(), entry_id: tdx.uuidv7(), tenant, auto_lock: !!body.auto_lock, input: { evidence, text: input.text, context: input.context } };
+      try { queue.submit(job); } catch (e) {
+        if (e.code === 'QUEUE_FULL') throw new HttpError(503, 'the processing queue is full; try again shortly', { retry_after_s: 30 });
+        throw e;
+      }
       if (query.get('wait') === '1' || query.get('wait') === 'true') {
-        let timer;
-        await Promise.race([new Promise(r => job.waiters.push(r)), new Promise(r => { timer = setTimeout(r, 120000); })]);
-        clearTimeout(timer);
+        await queue.wait(job.id, 120000);
         if (job.status === 'done') {
           const list = store.byEntry(job.entry_id);
           return { status: 201, body: { job: publicJob(job), record: effective(list) } };
         }
       }
       return { status: 202, body: { job: publicJob(job), status_url: `/v1/jobs/${job.id}` } };
+    }],
+
+    ['GET', /^\/v1\/telemetry$/, true, ({ tenant, query }) => {
+      const filter = { from: query.get('from'), to: query.get('to'), educator_ref: query.get('educator_ref') };
+      for (const k of ['from', 'to']) if (filter[k] && !/^\d{4}-\d{2}-\d{2}$/.test(filter[k])) throw new HttpError(400, `${k} must be YYYY-MM-DD`);
+      return telemetry({
+        capsules: store.capsules(tenant), jobs: store.jobs().filter(j => j.tenant === tenant),
+        queue: queue ? queue.stats(j => j.tenant === tenant) : null, filter,
+      });
     }],
 
     ['GET', /^\/v1\/jobs\/([0-9a-f-]{36})$/, true, ({ params, tenant }) => {
@@ -323,14 +339,22 @@ function createApi({ engine, store, key, registry, tokens = {}, concurrency = 2,
       const status = e.status || 500;
       if (status === 500) log({ type: 'error', path: url.pathname, error: e.stack || String(e) });
       const { status: _s, message, ...extra } = e;
+      if (e.retry_after_s) res.setHeader('Retry-After', String(e.retry_after_s));
       send(res, status, JSON.stringify({ error: status === 500 ? 'internal error' : e.message, ...(status === 500 ? {} : extra) }));
     } finally {
       log({ type: 'request', method: req.method, path: url.pathname, ms: Date.now() - t0 });
     }
   }
 
+  // Created last: recovery may finish jobs at once, which uses the helpers above.
+  const queue = engine ? createQueue({ store, run: runJob, resume: resumeJob, workers, maxDepth: maxQueue, retries, ...(backoffMs ? { backoffMs } : {}), log }) : null;
+  const resumed = queue ? queue.recover() : 0;
+  if (resumed) log({ type: 'queue_recovered', jobs: resumed });
+
   return {
     handler,
+    queue,
+    close: () => queue?.close(),
     listen(port = 8080, host = '127.0.0.1') {
       const server = http.createServer(handler);
       return new Promise(resolve => server.listen(port, host, () => resolve(server)));

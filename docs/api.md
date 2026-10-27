@@ -11,6 +11,7 @@ Node `http`, no framework, no dependencies. Start it with `tdx serve` (or `npm r
 | `TDX_KEY_REGISTRY` | The published key registry (`{ "keys": [...] }`), must contain the signing key's public entry. Served at `/v1/keys` and `/.well-known/tdx-keys.json`. |
 | `TDX_DATA_DIR` | Where capsules, seals, countersignatures and evidence are written (plain files; never overwritten). Without it, everything is in memory. Keep `evidence/` private. |
 | `META_API_KEY`, `TDX_META_DAILY_LIMIT` | Meta Model API key for the Record Engine and its daily call limit (default 500). |
+| `TDX_WORKERS`, `TDX_MAX_QUEUE` | Records processed in parallel (default 2) and the most jobs waiting before capture is refused with `503` + `Retry-After` (default 1000). |
 | `PORT`, `HOST` | Default `8080`, `127.0.0.1`. |
 
 One process owns a data directory (chain appends are serialised in memory per educator-day).
@@ -39,7 +40,7 @@ One process owns a data directory (chain appends are serialised in memory per ed
 }
 ```
 
-Capture returns at once: `202 { job, status_url }`; the Record Engine runs in the background (in-process queue).
+Capture returns at once: `202 { job, status_url }`; the Record Engine runs in the background (see *Work queue* below).
 With `?wait=1` it waits (up to 2 minutes) and returns `201 { job, record }`. The finished job carries
 `routing` (`auto_lock | confirm | hold`, fields to confirm, reasons), `message` (one sentence for the
 educator in their language), `steps` (provider, model, status, ms, cost per pipeline step) and the
@@ -53,7 +54,7 @@ Evidence bytes are stored under their sha256; the capsule holds only the hash.
 
 | | |
 |---|---|
-| `GET /v1/jobs/:id` | Job status and result. |
+| `GET /v1/jobs/:id` | Job status (`queued / running / retrying / done / failed`), attempts and result. |
 | `GET /v1/records?educator_ref=&date=` | The educator's records for a day (each entry's effective capsule). |
 | `GET /v1/records/:entry_id[?locale=]` | `{ effective, capsules (full history), countersignatures, message }`. |
 
@@ -74,6 +75,31 @@ Evidence bytes are stored under their sha256; the capsule holds only the hash.
 | `POST /v1/days/:educator_ref/:date/seal` | Signed Merkle seal over the day's records. Sealing again later (after more records or corrections) adds a new seal. |
 | `POST /v1/days/:educator_ref/:date/countersign` | The approver countersigns the sealed day (the register). Refused if records were added after the latest seal. |
 | `GET /v1/days/:educator_ref/:date/proof/:capsule_id` | Merkle inclusion proof of one record against the latest seal. |
+
+### Telemetry
+
+`GET /v1/telemetry[?from=YYYY-MM-DD&to=YYYY-MM-DD&educator_ref=…]` — the tenant's figures, computed from the
+provenance every draft already carries (nothing extra is logged about educators):
+
+- `records`, `decisions` (`auto_lock / confirm / hold`), `auto_lock_rate`, `fallback_rate`, `overall_confidence_mean`;
+- `steps[]`: per step × provider × model — calls, status counts (`ok / fallback / failed / skipped`), latency
+  (`mean / p50 / p95 / max` ms), tokens in/out, `cost_usd` and `calls_with_unknown_cost`;
+- `providers`: share of steps each provider served (e.g. Meta vs the fallback);
+- `per_record`: model time per record, mean cost where every step's price is known, and how many records
+  include a step with an unknown price (Muse Spark's price is not published yet — it is counted, never estimated);
+- `capture`: jobs done / failed, retries, capture-to-draft latency; `queue`: running, queued, retrying, oldest wait.
+
+## Work queue
+
+Capture stores the evidence under its hash, writes a job and returns. Workers (`TDX_WORKERS`) run the Record
+Engine. With `TDX_DATA_DIR` each job is a file (`jobs/<id>.json`, replaced atomically), so after a restart
+queued jobs run, and a job that was running when the process stopped runs again. Each job carries a
+pre-assigned `entry_id`, so if its draft had already been stored, the job is completed from that draft instead —
+a crash never produces two records. When every provider was down or timed out (`NO_PROVIDER`, `TIMEOUT`,
+HTTP 5xx/429) a job is retried twice, after 30 s and 2 min; other errors fail at once. A finished job keeps no
+input (text and context are dropped; evidence stays in the store) and transcripts are never written to disk.
+Finished jobs are removed after 7 days. When `TDX_MAX_QUEUE` jobs are waiting, capture answers `503` with
+`Retry-After: 30`.
 
 Errors are `{ "error": "…" }` with 400 / 401 / 404 / 405 / 409 / 413; internal errors never include details.
 

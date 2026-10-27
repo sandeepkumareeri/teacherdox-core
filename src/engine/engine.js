@@ -21,6 +21,7 @@ const packs = require('../packs');
 
 const PIPELINE_VERSION = 'core-0.2';
 
+const UUIDV7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const isImage = e => /^image\//.test(e.media_type);
 const isAudio = e => /^audio\//.test(e.media_type);
 const blank = v => (typeof v === 'string' && v.trim() ? v.trim() : null);
@@ -153,6 +154,7 @@ function createEngine({ router, policy = 'school_compliance', boardQueries = ['c
 
     // ── draft capsule ────────────────────────────────────────────────────────────
     const body = {
+      ...(UUIDV7.test(String(ctx.entry_id || '')) ? { entry_id: ctx.entry_id } : {}),   // a queue pre-assigns it so a retried job is idempotent
       tenant: ctx.tenant,
       actor: { educator_ref: ctx.educator_ref, institution_ref: ctx.institution_ref, institution_type: ctx.institution_type },
       locale: ctx.locale, record_locale: ctx.record_locale, country: ctx.country,

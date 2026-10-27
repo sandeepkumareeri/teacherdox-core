@@ -6,6 +6,7 @@
 //   TDX_KEY_REGISTRY      published registry JSON (must contain the signing key's public entry)
 //   TDX_DATA_DIR          where records are kept (default: memory only)
 //   META_API_KEY          Meta Model API key for the Record Engine; TDX_META_DAILY_LIMIT (default 500)
+//   TDX_WORKERS           records processed in parallel (default 2); TDX_MAX_QUEUE (default 1000)
 //
 // Without a signing key a temporary one is made for this process only — fine for a demo,
 // useless for real records (nobody can verify them after a restart).
@@ -35,7 +36,10 @@ function config(env = process.env) {
     registry = { keys: [k.publicEntry] };
     console.warn('tdx serve: no TDX_SIGNING_KEY_FILE — using a temporary signing key; records will not verify after a restart');
   }
-  return { tokens, key, registry, dataDir: env.TDX_DATA_DIR || null, metaDailyLimit: Number(env.TDX_META_DAILY_LIMIT || 500) };
+  return {
+    tokens, key, registry, dataDir: env.TDX_DATA_DIR || null, metaDailyLimit: Number(env.TDX_META_DAILY_LIMIT || 500),
+    workers: Number(env.TDX_WORKERS || 2), maxQueue: Number(env.TDX_MAX_QUEUE || 1000),
+  };
 }
 
 async function start({ port = 8080, host = '127.0.0.1', env = process.env } = {}) {
@@ -43,7 +47,7 @@ async function start({ port = 8080, host = '127.0.0.1', env = process.env } = {}
   if (!Object.keys(c.tokens).length) console.warn('tdx serve: TDX_API_TOKENS is empty — only the public endpoints (verify, keys) will work');
   const engine = createRecordEngine({ dailyLimit: { meta: c.metaDailyLimit } });
   const api = createApi({
-    engine, store: createStore({ dir: c.dataDir }), key: c.key, registry: c.registry, tokens: c.tokens,
+    engine, store: createStore({ dir: c.dataDir }), key: c.key, registry: c.registry, tokens: c.tokens, workers: c.workers, maxQueue: c.maxQueue,
     log: e => { if (e.type !== 'request') console.log(JSON.stringify({ at: new Date().toISOString(), ...e })); },
   });
   const server = await api.listen(port, host);

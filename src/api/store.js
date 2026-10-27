@@ -2,12 +2,14 @@
 // Record store for the API: capsules, evidence, day seals and countersignatures, kept
 // in memory and — when `dir` is given — written to disk as plain files and loaded again
 // at start, so a restart loses nothing but unfinished jobs. Capsules and seals are never
-// rewritten: every write is a new file. One process owns a directory.
+// rewritten: every write is a new file. Jobs are the exception — their status changes —
+// and are replaced atomically (write + rename). One process owns a directory.
 //
 //   dir/capsules/<capsule_id>.json
 //   dir/seals/<n>.json               (all seals, newest last per day)
 //   dir/countersignatures/<n>.json
 //   dir/evidence/<sha256 hex>        (raw bytes — keep this directory private)
+//   dir/jobs/<job id>.json           (the work queue: the only files that are rewritten, atomically)
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -53,6 +55,7 @@ function createStore({ dir = null } = {}) {
     read('capsules').forEach(index);
     read('seals').forEach(s => { if (!seals.has(s.scope)) seals.set(s.scope, []); seals.get(s.scope).push(s); });
     countersigs.push(...read('countersignatures'));
+    read('jobs').forEach(j => jobs.set(j.id, j));
   }
 
   return {
@@ -95,8 +98,33 @@ function createStore({ dir = null } = {}) {
     putCountersignature(cs) { write('countersignatures', nextName(), JSON.stringify(cs)); countersigs.push(cs); },
     countersignaturesFor: (type, id) => countersigs.filter(cs => cs.target.type === type && cs.target.id === id),
 
-    putJob: job => jobs.set(job.id, job),
+    /** Evidence bytes by hash (from memory, or from disk after a restart). */
+    getEvidence(id) {
+      const m = evidence.get(id);
+      if (m && m.bytes) return m.bytes;
+      if (!dir) return null;
+      try { return fs.readFileSync(path.join(dir, 'evidence', String(id).slice(7))); } catch { return null; }
+    },
+
+    /** All capsules (optionally one tenant's), in no particular order. */
+    *capsules(tenant) { for (const c of capsules.values()) if (!tenant || c.body.tenant === tenant) yield c; },
+
+    /** Jobs: kept in memory; with a dir, also on disk minus anything marked `volatile` (e.g. transcripts). */
+    putJob(job) {
+      jobs.set(job.id, job);
+      if (!dir) return;
+      const { waiters, volatile, ...durable } = job;
+      fs.mkdirSync(path.join(dir, 'jobs'), { recursive: true });
+      const file = path.join(dir, 'jobs', `${job.id}.json`);
+      fs.writeFileSync(file + '.tmp', JSON.stringify(durable));
+      fs.renameSync(file + '.tmp', file);
+    },
     getJob: id => jobs.get(id) || null,
+    jobs: () => [...jobs.values()],
+    deleteJob(id) {
+      jobs.delete(id);
+      if (dir) try { fs.unlinkSync(path.join(dir, 'jobs', `${id}.json`)); } catch { /* already gone */ }
+    },
   };
 }
 
