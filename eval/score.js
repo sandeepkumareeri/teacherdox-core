@@ -9,7 +9,8 @@
 //                when there is no homework, correct only if none was recorded
 //   topics       a true keyword appears in topics, title or summary
 //
-// A field the engine left empty counts as wrong, except where the truth is empty.
+// A field the engine left empty counts as wrong, except where the truth is empty. A record with no content
+// at all (held: nothing read or heard) scores zero on every field.
 
 const ALIASES = [
   ['mathematics', 'maths', 'math'],
@@ -30,6 +31,8 @@ function scoreRecord(truth, rec) {
   const text = norm([c.title, ...(c.topics || []), c.summary, s.unit].join(' '));
   const unitText = norm([s.unit, c.title].join(' '));
   const out = {};
+  // A held record with no content (nothing could be read or heard) gets no credit — not even for "no homework".
+  if (!s.subject && !s.unit && !s.cohort && !c.title) return Object.fromEntries(FIELDS.map(f => [f, false]));
   out.cohort = truth.cohort == null ? !s.cohort : !!s.cohort && cohortKey(s.cohort) === cohortKey(truth.cohort);
   out.subject = !!s.subject && subjectKey(s.subject) === subjectKey(truth.subject);
   out.unit = words(truth.unit).some(w => words(unitText).includes(w) || unitText.includes(w));
