@@ -1,0 +1,11 @@
+{
+  "name": "teacherdox-core",
+  "version": "0.1.0",
+  "description": "Teaching documentation infrastructure for the world: the open .tdx record, a multimodal record engine on Meta's models, and verifiable trust.",
+  "license": "Apache-2.0",
+  "main": "src/tdx/index.js",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test test/*.test.js" },
+  "repository": { "type": "git", "url": "https://github.com/sandeepkumareeri/teacherdox-core" },
+  "keywords": ["teaching", "education", "records", "verifiable", "tdx", "whatsapp", "meta", "muse"]
+}
