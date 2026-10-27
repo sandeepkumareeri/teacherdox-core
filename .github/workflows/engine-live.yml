@@ -1,0 +1,35 @@
+# Record Engine live run on Meta's models, synthetic evidence only (a generated board
+# photo and espeak-ng voice notes in five languages). Results as annotations and a step
+# summary. Needs the META_API_KEY repository secret; GEMINI_API_KEY + GEMINI_MODEL are
+# optional (fallback for Malayalam and failures).
+# Actions → Engine live run → Run workflow.
+name: Engine live run
+on:
+  workflow_dispatch:
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Unit tests
+        run: npm test
+      - name: Synthetic voice notes (espeak-ng → OGG/Opus, like WhatsApp)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq espeak-ng ffmpeg >/dev/null
+          mkdir -p /tmp/audio
+          say() { espeak-ng -v "$1" -w /tmp/raw.wav "$2" && ffmpeg -loglevel error -y -i /tmp/raw.wav -c:a libopus -b:a 24k /tmp/audio/$3.ogg; }
+          say en "Class eight B, mathematics, period two. Adding fractions with unlike denominators. Homework is exercise three point two, questions one to five." en
+          say hi "कक्षा आठ बी, गणित। आज भिन्नों का जोड़ सिखाया। गृहकार्य अभ्यास तीन दो।" hi
+          say te "ఎనిమిదవ తరగతి బి, గణితం. ఈ రోజు భిన్నాల కూడిక నేర్పించాను. హోంవర్క్ అభ్యాసం మూడు రెండు." te
+          say ml "എട്ടാം ക്ലാസ് ബി, ഗണിതം. ഇന്ന് ഭിന്നസംഖ്യകളുടെ കൂട്ടൽ പഠിപ്പിച്ചു." ml
+          say pt "Turma de estruturas de dados. Hoje: tabelas hash e endereçamento aberto. Tarefa: laboratório seis." pt
+      - name: Live run
+        env:
+          META_API_KEY: ${{ secrets.META_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          LIVE_AUDIO_DIR: /tmp/audio
+        run: node scripts/engine-live.js

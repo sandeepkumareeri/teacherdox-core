@@ -26,36 +26,50 @@ npm test        # node --test test/*.test.js — no dependencies needed
 
 Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
-## Status (27 Oct 2026)
+## Status (27 Oct 2026, evening)
 
 Done:
-- `spec/00-core-architecture.md`, `spec/tdx-2.0.md`.
+- `spec/00-core-architecture.md`, `spec/tdx-2.0.md` (§6 schema conformance, §7 provenance step fields).
 - `src/tdx/` trust layer: RFC 8785 canonical JSON, UUIDv7, Ed25519 keys/sign/verify with validity &
   revocation, capsule hash, `draft` → `lock` (auto/confirmed) with per-educator daily hash chain,
   `amend` (new capsule, same entry_id), `verifyCapsule` / `verifyDay` (RFC-002 §10), Merkle day seal
-  + inclusion proofs. 9 passing tests in `test/tdx.test.js`.
+  + inclusion proofs.
+- `spec/schema/tdx-2.0.schema.json` (normative, JSON Schema 2020-12) + `src/tdx/schema.js`
+  (dependency-free validator; `verifyCapsule` applies it).
+- `src/engine/` Record Engine: `router.js` (capabilities `segment|transcribe|structure|verify`,
+  priority order, fallback on error/timeout/unsupported input/consent/daily limit, provenance step per
+  call), `providers/meta.js` (SAM 3.1 `/responses` box parsing, Muse Voice Transcribe `/asr/transcribe`
+  with OGG→WAV via ffmpeg and no Malayalam, Muse Spark strict JSON schema; refuses `-contributor`
+  models), `providers/gemini.js` (`fromGenerate(hostGenerate)` — the host supplies Gemini, the core
+  never calls Google), `media.js` (ffmpeg optional: WAV conversion, board crop), `prompts.js`
+  (read + check prompts and strict schemas; subject ≠ unit), `score.js` (field classes, institution
+  promotions, policies `personal|school_compliance|government_audit` → `auto_lock|confirm|hold`),
+  `engine.js` (locate ∥ listen → read → check → score → schema-valid draft capsule; transcripts and
+  crops returned beside the capsule, never inside it).
+- Tests: 32 passing (`test/tdx.test.js`, `test/schema.test.js`, `test/engine.test.js` with the Meta
+  API mocked per the notes; ffmpeg tests skip without ffmpeg).
+- `scripts/engine-live.js` + `.github/workflows/engine-live.yml`: live run on synthetic evidence
+  (board fixture + espeak-ng OGG voice notes in en/hi/te/ml/pt). **Not yet run** — needs the
+  `META_API_KEY` secret on this repo (optional `GEMINI_API_KEY` secret + `GEMINI_MODEL` variable).
 - Meta Model API probed live (see `docs/meta-model-api-notes.md`): Muse Spark text + vision + JSON
   schema, SAM 3.1 board box, Muse Voice Transcribe (WAV only; no Malayalam).
 
+Open questions to check against dev.meta.ai (do not guess): system-role messages for Muse Spark (the
+engine puts instructions in the user turn); exact `languageBias` names beyond Hindi/English/Portuguese;
+Muse Spark per-token price (cost is recorded as `null` until known; ASR uses $0.18/h).
+
 Next, in order:
-1. `spec/schema/tdx-2.0.schema.json` (normative JSON Schema) + a light validator.
-2. **Record Engine** `src/engine/`: capability router (`segment`, `transcribe`, `structure`, `verify`)
-   → providers `meta` (Meta Model API) and `fallback` (Gemini, supplied by the host app via an
-   adapter — the core must not hard-depend on Google); per-step provenance (provider, model, ms,
-   tokens, cost); language routing (Malayalam → fallback for transcription); OGG→WAV conversion
-   via ffmpeg when available.
-   Pipeline: locate (SAM 3.1 box → crop) → listen → read (Muse Spark JSON schema producing a
-   `.tdx` 2.0 body + per-field confidence; separate subject vs unit) → check (second pass that
-   cross-checks fields against evidence, flags contradictions) → score/route (RFC-002 field classes,
-   policy thresholds) → `draft` capsule.
-3. Packs `packs/`: locales (en, ml, te, hi, pt-BR, id, fr), institutions (school, university, academy,
-   training), countries (IN, BR, ID, FR/SN…), policies (personal, school_compliance,
-   government_audit, low_connectivity).
-4. REST API `src/api/` (Node http, no framework needed) + public verifier page + `bin/tdx` CLI
+1. Run *Engine live run* in Actions; fix anything the real API disagrees with; record results in
+   `docs/meta-model-api-notes.md`.
+2. Packs `packs/`: locales (en, ml, te, hi, pt-BR, id, fr), institutions (school, university, academy,
+   training — move `score.js` PROMOTIONS and prompts.js VOCAB there), countries (IN, BR, ID, FR/SN…),
+   policies (personal, school_compliance, government_audit, low_connectivity — move `score.js` POLICIES).
+3. REST API `src/api/` (Node http, no framework needed) + public verifier page + `bin/tdx` CLI
    (`tdx verify file.json --keys keys.json`).
-5. Queue-based processing + cost/latency telemetry.
-6. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
-7. Integration into the private product as the first channel (its `gemini.js` boundary).
+4. Queue-based processing + cost/latency telemetry.
+5. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
+6. Integration into the private product as the first channel (its `gemini.js` boundary:
+   `fromGenerate(gemini.generate)` as fallback, `allow_providers` from `META_AI_PHONES`).
 
 ## Rules
 

@@ -33,7 +33,9 @@ photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  
 | [`spec/tdx-2.0.md`](spec/tdx-2.0.md) | The `.tdx` 2.0 universal teaching record |
 | [`spec/schema/tdx-2.0.schema.json`](spec/schema/tdx-2.0.schema.json) | Normative JSON Schema (2020-12) |
 | `src/tdx/` | Reference implementation: canonical form, signing, chain, verification, seals, schema validator |
-| `test/` | Tests (`npm test`) |
+| `src/engine/` | Record Engine: capability router, Meta provider (SAM 3.1, Muse Voice Transcribe, Muse Spark), host-supplied fallback, locate → listen → read → check → score |
+| `test/` | Tests (`npm test`) — Meta API mocked with the shapes in `docs/meta-model-api-notes.md` |
+| `scripts/engine-live.js` | Live run on synthetic evidence (Actions → *Engine live run*, needs `META_API_KEY`) |
 
 ## Quick start
 
@@ -49,6 +51,36 @@ const draft = tdx.draft({ tenant: 't_demo', actor: { educator_ref: 'e_1', instit
 const record = tdx.lock(draft, { key });
 tdx.verifyCapsule(record, { keys: [key.publicEntry] });   // → { ok: true, ... }
 ```
+
+### Record Engine
+
+```js
+const { createRecordEngine, fromGenerate } = require('./src/engine');
+const engine = createRecordEngine({
+  fallback: fromGenerate(myGeminiGenerate),        // optional; the core never calls Google itself
+  dailyLimit: { meta: 500 },                       // a bug cannot burn the credits
+});
+const { capsule, routing, transcripts } = await engine.process({
+  evidence: [{ bytes: boardJpeg, media_type: 'image/jpeg' }, { bytes: voiceOgg, media_type: 'audio/ogg' }],
+  text: 'P2',
+  context: { tenant: 't_demo', educator_ref: 'e_1', institution_ref: 'i_1', institution_type: 'school',
+    locale: 'te-IN', record_locale: 'en', country: 'IN', timezone: 'Asia/Kolkata', date: '2026-10-28',
+    channel: 'whatsapp', session: { label: 'P2' }, allow_providers: ['meta', 'gemini'] },
+});
+// capsule: a valid draft .tdx 2.0 record (hashes only, no bytes or transcripts), with
+//          per-step provenance: provider, model, status, ms, tokens, cost
+// routing: { decision: 'auto_lock' | 'confirm' | 'hold', confirm_fields, reasons, ... }
+```
+
+| Step | Capability | Meta model | Without it |
+|---|---|---|---|
+| locate | `segment` | SAM 3.1 — finds the board; ffmpeg crops to it | whole photo is read |
+| listen | `transcribe` | Muse Voice Transcribe — OGG/Opus → 16 kHz WAV via ffmpeg | fallback provider (always for Malayalam, which Meta does not support) |
+| read | `structure` | Muse Spark, strict JSON schema, per-field confidence | fallback provider |
+| check | `verify` | Muse Spark, second pass: each field supported / unsupported / contradicted | record cannot be auto-locked |
+| score | — | field classes (critical / material / soft) × policy | — |
+
+Providers are tried in order and skipped when they lack the capability, cannot take the input, are not allowed for this educator (`allow_providers`, for consent) or have hit their daily limit; errors and timeouts fall through. If nothing usable was read or heard, no model is asked to invent a record — the draft is held.
 
 ## License
 
