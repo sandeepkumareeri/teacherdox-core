@@ -26,80 +26,111 @@ npm test        # node --test test/*.test.js — no dependencies needed
 
 Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
-## Status (27 Oct 2026, night)
+## Status (27 Oct 2026)
 
-Done:
-- `spec/00-core-architecture.md`, `spec/tdx-2.0.md` (§6 schema conformance, §7 provenance step fields).
-- `src/tdx/` trust layer: RFC 8785 canonical JSON, UUIDv7, Ed25519 keys/sign/verify with validity &
-  revocation, capsule hash, `draft` → `lock` (auto/confirmed) with per-educator daily hash chain,
-  `amend` (new capsule, same entry_id), `verifyCapsule` / `verifyDay` (RFC-002 §10), Merkle day seal
-  + inclusion proofs.
-- `spec/schema/tdx-2.0.schema.json` (normative, JSON Schema 2020-12) + `src/tdx/schema.js`
-  (dependency-free validator; `verifyCapsule` applies it).
-- `src/engine/` Record Engine: `router.js` (capabilities `segment|transcribe|structure|verify`,
-  priority order, fallback on error/timeout/unsupported input/consent/daily limit, provenance step per
-  call), `providers/meta.js` (SAM 3.1 `/responses` box parsing, Muse Voice Transcribe `/asr/transcribe`
-  with OGG→WAV via ffmpeg and no Malayalam, Muse Spark strict JSON schema; refuses `-contributor`
-  models), `providers/gemini.js` (`fromGenerate(hostGenerate)` — the host supplies Gemini, the core
-  never calls Google), `media.js` (ffmpeg optional: WAV conversion, board crop), `prompts.js`
-  (read + check prompts and strict schemas; subject ≠ unit), `score.js` (field classes, institution
-  promotions, policies `personal|school_compliance|government_audit` → `auto_lock|confirm|hold`),
-  `engine.js` (locate ∥ listen → read → check → score → schema-valid draft capsule; transcripts and
-  crops returned beside the capsule, never inside it).
-- `packs/` + `src/packs/` (see `packs/README.md`): locales en, ml, te, hi, pt-BR, id, fr (non-English
-  marked `review: draft translation` until a native speaker checks them); institutions for all six
-  `institution_type`s (session kinds, field terms, promotions, approver, model vocabulary); countries
-  IN, BR, ID, FR, SN (time zones, record language, approver hierarchy, calendar); policies personal,
-  school_compliance, government_audit, low_connectivity (thresholds, steps, max capture lag, auto-lock,
-  approval). The engine takes promotions/vocabulary/kinds from institution packs, time zone and record
-  language defaults from country packs, thresholds/steps/lag/auto-lock from policy packs.
-  `packs.describe(result)` = one educator-facing sentence per outcome.
-- `src/tdx/countersign.js`: approver countersignatures of a locked capsule or a day seal (separate
-  signed statements pointing at the target's hash — capsules stay immutable). Spec §8.
-- `src/api/` REST API on `node:http` (docs in `docs/api.md`): bearer tokens per tenant (tenant always
-  from the token), `POST /v1/records` → in-process job queue (202, or `?wait=1`), lock (only if routing
-  says auto_lock) / confirm (with whitelisted corrections → `edited_fields`) / amend / countersign,
-  day seal + countersign + Merkle proof, `GET /v1/days/...` = exportable day, public `POST /v1/verify`,
-  `/v1/keys`. Chain appends serialised per educator-day. `store.js`: memory or `TDX_DATA_DIR` files
-  (never overwritten; reloaded at start). `main.js` reads env (`TDX_API_TOKENS`, `TDX_SIGNING_KEY_FILE`,
-  `TDX_SIGNING_KEY_ID`, `TDX_KEY_REGISTRY`, `TDX_DATA_DIR`, `META_API_KEY`).
-- `src/verifier/`: `report.js` (`verifyBundle` for any input: capsules, day exports, seals,
-  countersignatures, embedded-key warning), `webverify.js` (second implementation on WebCrypto only —
-  tests require identical reports to the reference), browser bundle builder. `verifier/index.html`
-  (public page at `/verify/`, verifies in the browser, sample + "change one homework line" demo),
-  `verifier/tdx-verify.js` (generated: `npm run build:verifier`; a test fails if stale),
-  `verifier/samples/` (synthetic day from `npm run build:sample`, demo key's public half only).
-- `src/api/queue.js`: durable work queue — jobs in `TDX_DATA_DIR/jobs/` (atomic replace), recovered at
-  start (queued → run; running → run again; a job whose pre-assigned `entry_id` already has a draft is
-  completed from it — never two records), retry with backoff only for NO_PROVIDER/TIMEOUT/5xx/429,
-  `503 Retry-After` past `TDX_MAX_QUEUE`, finished jobs drop input, transcripts never on disk, 7-day TTL.
-  Engine takes `context.entry_id`.
-- `src/api/telemetry.js` + `GET /v1/telemetry`: per tenant/period/educator — decisions, fallback rate,
-  per step×provider×model calls/status/latency percentiles/tokens/cost (unknown prices counted, not
-  estimated), provider shares, per-record cost/time, capture-to-draft latency, queue stats. Drafts only
-  (locked copies repeat provenance).
-- `bin/tdx` CLI: `verify`, `validate`, `hash`, `keygen`, `process` (engine), `serve`.
-- Tests: 60 passing (`tdx`, `schema`, `engine`, `packs`, `verifier`, `api`, `queue`; shared mocks in
-  `test/helpers.js` — the Meta API mocked per the notes; ffmpeg tests skip without ffmpeg).
-- `scripts/engine-live.js` + `.github/workflows/engine-live.yml`: live run on synthetic evidence
-  (board fixture + espeak-ng OGG voice notes in en/hi/te/ml/pt). **Not yet run** — needs the
-  `META_API_KEY` secret on this repo (optional `GEMINI_API_KEY` secret + `GEMINI_MODEL` variable).
-- Meta Model API probed live (see `docs/meta-model-api-notes.md`): Muse Spark text + vision + JSON
-  schema, SAM 3.1 board box, Muse Voice Transcribe (WAV only; no Malayalam).
+Built on branch `claude/exciting-faraday-exxt9l` (ahead of the plan below; gaps against the quality
+bar are listed under "Missing"):
+- Spec: `spec/00-core-architecture.md`, `spec/tdx-2.0.md` (§6 schema conformance, §7 provenance step
+  fields, §8 countersignatures), normative `spec/schema/tdx-2.0.schema.json`.
+- `src/tdx/` trust layer (zero deps): RFC 8785 canonical JSON, UUIDv7, Ed25519 keys/sign/verify with
+  validity & revocation, capsule hash, `draft` → `lock` with per-educator daily hash chain, `amend`,
+  `verifyCapsule` / `verifyDay`, Merkle day seal + proofs, countersignatures, `schema.js` validator.
+- `src/engine/` Record Engine: router (`segment | transcribe | structure | check`, priority order,
+  fallback on error/timeout/unsupported input/consent/daily limit, provenance per call); providers
+  `meta` (SAM 3.1, Muse Voice Transcribe with OGG→WAV, Muse Spark strict JSON schema; refuses
+  `-contributor` models) and `fromGenerate(hostGenerate)` fallback; locate ∥ listen → read → check →
+  score → schema-valid draft capsule; nothing usable → held, never invented.
+- `packs/` + `src/packs/`: locales en, ml, te, hi, pt-BR, id, fr (non-English = draft translations);
+  6 institutions; countries IN, BR, ID, FR, SN; policies personal, school_compliance,
+  government_audit, low_connectivity; `describe()`.
+- `src/api/` REST `/v1` (capture → durable queue → draft; lock / confirm / amend / countersign; day
+  seal, proofs, export; public verify; telemetry), `src/verifier/` (reference + WebCrypto
+  implementation, identical reports), `verifier/` public page, `bin/tdx` (verify, validate, hash,
+  keygen, process, serve). Docs: `docs/api.md`, `packs/README.md`.
+- Tests: `npm test` (tdx, schema, vectors, engine, packs, verifier, api, queue).
+- Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) and
+  `engine-live.yml` (all languages). Need the `META_API_KEY` secret on this repo. The sandbox cannot
+  reach api.meta.ai.
+
+Missing against the quality bar: API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
+CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; `eval/`; CI + CodeQL; SECURITY /
+CONTRIBUTING / CODE_OF_CONDUCT / CHANGELOG; quickstart + how-a-record-is-born + Mermaid diagrams;
+README rewrite; verifier page in brand style (#1B5E3B, DM Sans/Mono); tag v0.1.0.
 
 Open questions to check against dev.meta.ai (do not guess): system-role messages for Muse Spark (the
 engine puts instructions in the user turn); exact `languageBias` names beyond Hindi/English/Portuguese;
 Muse Spark per-token price (cost is recorded as `null` until known; ASR uses $0.18/h).
 
-Next, in order:
-1. Run *Engine live run* in Actions; fix anything the real API disagrees with; record results in
-   `docs/meta-model-api-notes.md`.
-2. Native-speaker review of the ml / te / hi / pt-BR / id / fr packs (ask Sandeep).
-3. Deploy the API + verifier page somewhere public for the demo (decide with Sandeep: the TeacherDox
-   server or a separate host; needs a real signing key and published registry).
-4. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
-5. Integration into the private product as the first channel (its `gemini.js` boundary:
-   `fromGenerate(gemini.generate)` as fallback, `allow_providers` from `META_AI_PHONES`).
+## Quality bar — build this like a top platform team would
+
+The repo must read as if a world-class platform team built it: discipline, not size. Every claim
+tested, every behaviour written down, a stranger can verify everything in five minutes. (Quality
+*like* theirs only — never use Meta's/Apple's names, logos or styling as if they made it.)
+
+1. **Specification** — `.tdx 2.0` in RFC style (MUST/SHOULD/MAY, every field defined), normative
+   `spec/schema/tdx-2.0.schema.json`, and **test vectors** in `spec/vectors/` (synthetic records
+   with a fixed test key, their canonical bytes, capsule hashes, signatures, chain links, seal roots
+   and proofs; valid and deliberately invalid cases) so any implementation in any language can check
+   itself. Vectors are generated by a script and verified by the test suite.
+2. **Code** — zero runtime deps in `src/tdx`; JSDoc types checked with `tsc --noEmit --checkJs`
+   (dev dependency only, no build step); tests for every MUST in the spec (tamper, gaps, duplicates,
+   revocation, key validity, amendments, seals); aim for ~100% coverage of the trust layer
+   (`node --test --experimental-test-coverage`).
+3. **Record Engine** (`src/engine/`) — shows its work: every step writes provenance (provider,
+   model, ms, tokens, cost); per-field confidence; uncertain fields routed to the educator, never
+   silently saved; Meta first, fallback visible in the record.
+4. **API** — `src/api/` on Node `http`, versioned `/v1`, stable error codes (`{error:{code,message}}`),
+   `spec/openapi.yaml`; `bin/tdx` CLI (`tdx verify`, `tdx inspect`, `tdx keygen`, `tdx seal`);
+   a public **verifier page** (static HTML, verification runs in the browser via WebCrypto Ed25519:
+   ✓ signed ✓ unchanged ✓ in the day's chain).
+5. **Proof with numbers** — `eval/` harness, Meta vs Gemini on synthetic/consented samples: per-field
+   accuracy, latency, cost per record. Publish `eval/RESULTS.md` honestly, including where Meta was
+   weaker. Real numbers only, from real runs (GitHub Actions annotations).
+6. **Hygiene** — CI on every push (`.github/workflows/ci.yml`: tests, type check, coverage, CodeQL);
+   `SECURITY.md` with a threat model (what can be forged, what can't, key compromise, replay);
+   `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`; tag release `v0.1.0`.
+7. **Docs** — README a judge gets in 30 seconds (one diagram, one sentence, one command);
+   `docs/quickstart.md` (5 minutes), `docs/how-a-record-is-born.md` (photo → signed capsule, step
+   by step, with a real example output), architecture diagrams (Mermaid).
+8. **Presentation** — calm and premium, consistent across README, verifier page and demo: white
+   space, one accent colour (TeacherDox green `#1B5E3B`), DM Sans / DM Mono where fonts apply.
+
+Never: fake badges, stars, user numbers, "audited"/"enterprise scale" claims, or SDKs in many
+languages (one excellent implementation + test vectors beats that). State what was measured.
+
+## Plan — finish the core in 3 days (27–29 Oct), not by 4 Nov
+
+Work in this order; commit and push working increments often; keep `npm test` green; add a dated
+line to `HACKATHON.md` each day. If a day slips, cut scope from the bottom of that day, never skip
+tests or the spec.
+
+**Day 1 — Tue 27 Oct: the contract + photo → signed record**
+- JSON Schema + light validator (dependency-free) + test vectors + vector tests.
+- Engine skeleton: capability router (`segment`, `transcribe`, `structure`, `check`) with providers
+  `meta` and `fallback` (fallback supplied by the host via an adapter — core never hard-depends on
+  Google); provenance per step.
+- Photo pipeline on Meta: SAM 3.1 box → crop → Muse Spark JSON schema → `.tdx 2.0` body with
+  per-field confidence (subject separate from unit/chapter) → `draft` capsule. A GitHub Actions
+  workflow runs it live on the synthetic board and reports the capsule as annotations.
+
+**Day 2 — Wed 28 Oct: voice, languages, check, API**
+- Voice: OGG→WAV via ffmpeg when present; Muse Voice Transcribe; language routing (`ml` → fallback).
+- Check pass (second call cross-checks fields against evidence, flags contradictions) + score/route
+  by RFC-002 field classes and policy thresholds.
+- Packs, minimum useful set: locales en, hi, te, ml, pt-BR; institutions school, university,
+  training; policies personal, school_compliance.
+- REST API `/v1` + `spec/openapi.yaml` + `bin/tdx` CLI.
+
+**Day 3 — Thu 29 Oct: proof, polish, release**
+- Verifier page (browser-side verification).
+- Eval harness + first real results in `eval/RESULTS.md`.
+- CI, type check, coverage, CodeQL; `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
+  `CHANGELOG.md`; docs (quickstart, how-a-record-is-born, diagrams); README rewrite; tag `v0.1.0`.
+
+**After the core (30 Oct – 4 Nov, in the private `teacherdox` repo):** integrate the engine as the
+product's AI backend behind its `gemini.js` boundary (Meta first, Gemini fallback, allow-listed
+numbers), live WhatsApp demo with demo/consented data, demo video, submission. Queue-based
+processing + telemetry dashboard only if time remains.
 
 ## Rules
 
