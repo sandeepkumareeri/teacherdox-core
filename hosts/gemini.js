@@ -17,7 +17,8 @@
 // Model: `model`, else GEMINI_MODEL, else resolveModel() picks the newest stable Flash model from the
 // backend's model list. Vertex express mode accepts API keys only on generateContent (its model list
 // answers 401), so when no list can be read the product's default alias `gemini-flash-latest` is
-// used, after a one-token call confirms it; the model that answered (`modelVersion`) is reported.
+// tried with a one-token call (observed 27 Oct: Vertex does not serve that alias → 404); on Vertex,
+// set GEMINI_MODEL.
 
 const STUDIO = 'https://generativelanguage.googleapis.com/v1beta';
 const VERTEX = 'https://aiplatform.googleapis.com/v1/publishers/google';
@@ -81,7 +82,7 @@ function createGeminiGenerate({ apiKey = process.env.GEMINI_API_KEY, backend = p
       answered = r.modelVersion || null;
       return (current = DEFAULT_ALIAS);
     } catch (e) { errors.push(`${DEFAULT_ALIAS} ${e.message}`); }
-    throw new Error(errors.join('; '));
+    throw new Error(`${errors.join('; ')} — set GEMINI_MODEL`);
   }
 
   async function post(name, body, signal) {
