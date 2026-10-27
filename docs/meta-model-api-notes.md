@@ -99,3 +99,17 @@ development sandbox cannot reach baseten.co) and observed live by the `Baseten p
   audio file attached" — not heard.
 - Audio with `response_format: json_schema` (second probe): **every** voice note — en/hi/te/ml, OGG and WAV — came back
   "no speech". So the engine asks for labelled lines without a schema for transcription.
+- Audio through the engine's own path (third probe, labelled-line prompt, `audio_url` data URL), 8 synthetic notes:
+  en.ogg, hi.ogg, hi.wav, ml.wav, te.ogg, te.wav → "no audio was provided"; en.wav → a labelled reply that only said
+  "No audio detected"; ml.ogg → a phonetic garble ("Mekam Klase Bi Kanidem … mathyasem mun rant") tagged `kn`.
+  **Conclusion: Muse Spark Open audio on Baseten is not reliable on these synthetic notes; transcription through it is
+  off by default and Malayalam is not routed to it.** Real recordings may differ — the eval measures it.
+- Photo pipeline, live (run 40499501908): SAM 3.1 unavailable (see below), so the whole photo was read — read 5.8 s,
+  2,425 in / 602 out tokens, $0.00559; check 6.9 s, 2,127 / 751, $0.00585; 8B · Mathematics · Fractions ·
+  "Adding Fractions by Making Denominators Same" · HW "Ex 3.2 Q1-5"; all fields ≥ 0.9 → auto-locked, signed, verified.
+
+## Meta Model API key, 27 Oct 11:49 UTC onward
+
+From 11:49 UTC the Meta Model API answered `HTTP 404 model_not_found` for `muse-spark-1.3` and `sam-3.1`, which worked
+at 10:39 UTC, and `GET /v1/models` with the repository's `META_API_KEY` returns an empty list: the key in the secret
+has no model access (replaced key, or credits/permissions changed). Nothing in the engine changed between the runs.

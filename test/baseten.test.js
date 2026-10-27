@@ -71,15 +71,17 @@ test('"heard no speech" is an error, never an empty transcript; labelled replies
   const { parseLabelled } = require('../src/engine/providers/baseten');
   assert.deepEqual(parseLabelled('TRANSCRIPT: Klasse 8b\nENGLISH: Class 8B\nLANGUAGE: de'), { transcript: 'Klasse 8b', english: 'Class 8B', language: 'de' });
   assert.equal(parseLabelled('I cannot listen to audio.'), null);
+  assert.equal(parseLabelled('TRANSCRIPT:\nENGLISH: No audio detected - please upload the voice note file.\nLANGUAGE: en'), null, 'observed live: a "no audio" reply with labels');
+  assert.equal(parseLabelled('TRANSCRIPT: There is no speech I can hear\nLANGUAGE: en'), null);
 });
 
-test('Malayalam is not routed to Muse Spark Open unless enabled (it heard no speech in the live probe)', async () => {
+test('Muse Spark Open transcription is off unless enabled per language (unreliable in live probes)', async () => {
   const bt = mockBaseten(), gemini = fakeGemini();
   const { capsule } = await engineWith({ baseten: bt, gemini }).process({ evidence: [{ bytes: wav(), media_type: 'audio/wav' }], context: CTX({ locale: 'ml-IN' }) });
   const listen = capsule.body.provenance.steps.find(s => s.step === 'listen');
   assert.equal(listen.provider, 'gemini');
   assert.deepEqual(listen.attempts.map(a => a.provider), ['meta', 'baseten']);
-  assert.match(listen.attempts[1].error, /not verified for "ml"/);
+  assert.match(listen.attempts[1].error, /transcription is off for "ml"/);
   const opted = await engineWith({ baseten: mockBaseten(), gemini, basetenOpts: { transcribeLanguages: ['en', 'ml'] } })
     .process({ evidence: [{ bytes: wav(), media_type: 'audio/wav' }], context: CTX({ locale: 'ml-IN' }) });
   assert.equal(opted.capsule.body.provenance.steps.find(s => s.step === 'listen').provider, 'baseten');

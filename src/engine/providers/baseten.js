@@ -17,7 +17,10 @@
 //   price (baseten.co/pricing, 27 Oct 2026): $1.25 input, $0.15 cached input, $4.25 output per 1M tokens
 //   transcription (observed): with response_format json_schema the model reported "no speech" for every
 //     voice note, English included; with a plain prompt asking for labelled lines it heard English.
-//     So transcription uses the labelled-line format, and a reply without a TRANSCRIPT line is "not heard".
+//     So transcription uses the labelled-line format, and a reply without a real TRANSCRIPT line is "not heard".
+//     Even so, across three live probes it heard synthetic English once (en.wav) and Malayalam never usably
+//     (one phonetic garble tagged "kn"); most replies were "no audio was provided". Transcription is therefore
+//     OFF by default (transcribeLanguages: []) — enable it per language only after it is measured to work.
 //
 //   structure / check → chat completion with the JSON schema in response_format and in the prompt
 //   transcribe        → chat completion with the voice note; asks the model to say if it heard nothing
@@ -45,16 +48,20 @@ function parseJson(text) {
 
 const PRICE = { input_per_mtok: 1.25, output_per_mtok: 4.25 };   // baseten.co/pricing, 27 Oct 2026 (cached input $0.15 not applied)
 
+const NOT_HEARD = /\b(no (audio|speech|voice)|not (hear|detect)|cannot hear|can't hear|unable to (hear|listen)|upload the (voice|audio))/i;
+
 /** "TRANSCRIPT: … / ENGLISH: … / LANGUAGE: xx" → fields, or null when the model gave no transcript. */
 function parseLabelled(text) {
   const grab = label => (String(text).match(new RegExp(`^\\s*${label}\\s*:\\s*(.*)$`, 'im')) || [])[1]?.trim() || '';
   const transcript = grab('TRANSCRIPT'), english = grab('ENGLISH'), language = grab('LANGUAGE');
-  return transcript || english ? { transcript, english, language: language.replace(/[^a-z-]/gi, '').slice(0, 5) } : null;
+  // A reply that only says there is no audio is "not heard", even when it uses the labels (observed live).
+  if (!transcript || NOT_HEARD.test(transcript) || NOT_HEARD.test(english)) return null;
+  return { transcript, english, language: language.replace(/[^a-z-]/gi, '').slice(0, 5) };
 }
 
 /**
  * options: apiKey (BASETEN_API_KEY), baseUrl, model (BASETEN_MODEL), fetch, reasoningEffort ('low'),
- *   maxTokens (12000), transcribeLanguages (['en'] — '*' for all), prices { input_per_mtok, output_per_mtok }
+ *   maxTokens (12000), transcribeLanguages ([] = off; ['en'] or '*' to enable), prices { input_per_mtok, output_per_mtok }
  *   (default: Baseten's published Muse Spark Open price; null = unknown)
  */
 function createBasetenProvider({
@@ -64,7 +71,7 @@ function createBasetenProvider({
   fetch: fetchFn = globalThis.fetch,
   reasoningEffort = 'low',
   maxTokens = 12000,
-  transcribeLanguages = ['en'],
+  transcribeLanguages = [],
   prices = PRICE,
 } = {}) {
   async function chat(messages, { signal, schema, schemaName }) {
@@ -119,7 +126,7 @@ function createBasetenProvider({
       if (!apiKey) return 'BASETEN_API_KEY is not set';
       if (capability === 'transcribe') {
         const l = lang(input.language);
-        if (transcribeLanguages !== '*' && !transcribeLanguages.includes(l)) return `Muse Spark Open transcription not verified for "${l || 'unknown'}"`;
+        if (transcribeLanguages !== '*' && !transcribeLanguages.includes(l)) return `Muse Spark Open transcription is off for "${l || 'unknown'}" (unreliable in live probes)`;
         if (!AUDIO_TYPES.test(input.audio.media_type)) return `audio type ${input.audio.media_type} is not accepted`;
       }
       return true;
