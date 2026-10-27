@@ -41,6 +41,23 @@ function generateKey(keyId, { validFrom = new Date().toISOString(), validTo = nu
   };
 }
 
+/**
+ * Ed25519 key from a 32-byte seed (hex). Deterministic — for test vectors and for keys held
+ * in an HSM/KMS export format. Never use a published seed for real records.
+ */
+function keyFromSeed(keyId, seedHex, { validFrom = null, validTo = null, revokedAt = null } = {}) {
+  const seed = Buffer.from(String(seedHex), 'hex');
+  if (seed.length !== 32) throw new Error('tdx/keyFromSeed: seed must be 32 bytes (64 hex characters)');
+  const der = Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]);   // PKCS#8 wrapper for an Ed25519 seed
+  const privateKey = crypto.createPrivateKey({ key: der, format: 'der', type: 'pkcs8' });
+  const jwk = crypto.createPublicKey(privateKey).export({ format: 'jwk' });
+  return {
+    keyId,
+    privateKeyPem: privateKey.export({ format: 'pem', type: 'pkcs8' }).toString(),
+    publicEntry: { kid: keyId, kty: 'OKP', crv: 'Ed25519', x: jwk.x, alg: 'ed25519', valid_from: validFrom, valid_to: validTo, revoked_at: revokedAt },
+  };
+}
+
 function signBytes(privateKeyPem, bytes) {
   return b64url(crypto.sign(null, Buffer.from(bytes), crypto.createPrivateKey(privateKeyPem)));
 }
@@ -50,4 +67,4 @@ function verifyBytes(publicEntry, bytes, sig) {
   try { return crypto.verify(null, Buffer.from(bytes), key, fromB64url(sig)); } catch { return false; }
 }
 
-module.exports = { sha256, uuidv7, uuidv7Time, generateKey, signBytes, verifyBytes, b64url, fromB64url };
+module.exports = { sha256, uuidv7, uuidv7Time, generateKey, keyFromSeed, signBytes, verifyBytes, b64url, fromB64url };

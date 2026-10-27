@@ -1,0 +1,529 @@
+{
+  "description": "Countersignatures of a locked record or a day seal; the target is given beside each.",
+  "cases": [
+    {
+      "id": "countersign-record",
+      "registry": "default",
+      "countersignature": {
+        "type": "tdx-countersignature",
+        "target": {
+          "type": "capsule",
+          "id": "01a180ad-4710-70ca-8000-0000000000ca",
+          "hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+        },
+        "approver_ref": "e_vec_hm",
+        "role": "headmaster",
+        "decision": "approved",
+        "note": null,
+        "signed_at": "2026-10-28T16:00:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "fqojJFEkdyVc8rGbq6rIwH0uiaP7svwFO3hcNrXt0LZXmZCMbGHhnmREvMA4Nnbzr3gUWifb9O4YH1ZarlAHCw"
+        }
+      },
+      "target": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "codes": []
+      }
+    },
+    {
+      "id": "countersign-day",
+      "registry": "default",
+      "countersignature": {
+        "type": "tdx-countersignature",
+        "target": {
+          "type": "day_seal",
+          "id": "t_vectors|e_vec_001|2026-10-28",
+          "hash": "sha256:50a02306cdf1f272ec3b195b6597dd321334745e3fc4c949dad4182eeb18d852"
+        },
+        "approver_ref": "e_vec_hm",
+        "role": "headmaster",
+        "decision": "approved",
+        "note": "Seen",
+        "signed_at": "2026-10-28T16:05:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "BH_iixW1k9wPA9XqTJ9549_m22uFaofVTJlwrR9zT2zziGisrhY5ihgd9jwi5mAoYgeX-tVCTdoGNjaagKrhAA"
+        }
+      },
+      "target": {
+        "type": "tdx-day-seal",
+        "scope": "t_vectors|e_vec_001|2026-10-28",
+        "count": 3,
+        "merkle_root": "68d4dfade448153e0f8709f5d9c24df62c2da732b0b3d9885de444eb05374bb0",
+        "sealed_at": "2026-10-28T15:00:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "NWyybg-0f8_e1WjEwkEkzrAVs5oQ8nnyX3OXMXsxZkEk-9TvAeuMNMSJMngxEUAogcA4AXhnXe2hBt6jjvSnDQ"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "codes": []
+      }
+    },
+    {
+      "id": "countersign-wrong-target",
+      "registry": "default",
+      "countersignature": {
+        "type": "tdx-countersignature",
+        "target": {
+          "type": "capsule",
+          "id": "01a180ad-4710-70ca-8000-0000000000ca",
+          "hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+        },
+        "approver_ref": "e_vec_hm",
+        "role": "headmaster",
+        "decision": "approved",
+        "note": null,
+        "signed_at": "2026-10-28T16:00:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "fqojJFEkdyVc8rGbq6rIwH0uiaP7svwFO3hcNrXt0LZXmZCMbGHhnmREvMA4Nnbzr3gUWifb9O4YH1ZarlAHCw"
+        }
+      },
+      "target": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4af8-70cb-8000-0000000000cb",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c458-7067-8000-000000000067",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P3",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:fac55a8514eb88d451e92a6d750f49b890454d1e14042ff864ece0e6a8773581",
+              "media_type": "image/jpeg",
+              "bytes": 1003,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 3",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.3 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 2,
+            "prev_hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "ZUpIXwFeJmq0OFTeHpsT_UY5hqNKdiwg9qWI3zZjwdsUOMRzw86DzY56iNy6XH8vWP5ng-j8m_FyUjizfth9DQ"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "codes": [
+          "countersignature_wrong_target"
+        ]
+      }
+    },
+    {
+      "id": "countersign-tampered",
+      "registry": "default",
+      "countersignature": {
+        "type": "tdx-countersignature",
+        "target": {
+          "type": "capsule",
+          "id": "01a180ad-4710-70ca-8000-0000000000ca",
+          "hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+        },
+        "approver_ref": "e_vec_hm",
+        "role": "headmaster",
+        "decision": "returned",
+        "note": null,
+        "signed_at": "2026-10-28T16:00:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "fqojJFEkdyVc8rGbq6rIwH0uiaP7svwFO3hcNrXt0LZXmZCMbGHhnmREvMA4Nnbzr3gUWifb9O4YH1ZarlAHCw"
+        }
+      },
+      "target": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "codes": [
+          "countersignature_invalid"
+        ]
+      }
+    },
+    {
+      "id": "countersign-revoked-key",
+      "registry": "revoked",
+      "countersignature": {
+        "type": "tdx-countersignature",
+        "target": {
+          "type": "capsule",
+          "id": "01a180ad-4710-70ca-8000-0000000000ca",
+          "hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+        },
+        "approver_ref": "e_vec_hm",
+        "role": "headmaster",
+        "decision": "approved",
+        "note": null,
+        "signed_at": "2026-10-28T16:00:00Z",
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "sig": "fqojJFEkdyVc8rGbq6rIwH0uiaP7svwFO3hcNrXt0LZXmZCMbGHhnmREvMA4Nnbzr3gUWifb9O4YH1ZarlAHCw"
+        }
+      },
+      "target": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "codes": [
+          "key_revoked"
+        ]
+      }
+    }
+  ]
+}

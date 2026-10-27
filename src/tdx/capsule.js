@@ -64,11 +64,11 @@ function lock(draftEnvelope, { key, prev = null, state = 'auto_locked', attestat
  * A correction: a new locked capsule with the same entry_id, pointing at the capsule it amends,
  * appended to the chain like any other locked capsule (RFC-002 §7, §8).
  */
-function amend(original, changes, { key, prev, reason, amendedFields = [], amenderRef, state = 'confirmed_locked', attestation = {}, signedAt }) {
+function amend(original, changes, { key, prev, reason, amendedFields = [], amenderRef, state = 'confirmed_locked', attestation = {}, signedAt, capsuleId }) {
   if (!LOCKED.has(original.body?.lifecycle?.state)) throw new Error('tdx/amend: only locked capsules can be amended');
   const body = deepMerge(clone(original.body), changes);
   body.amendment = { amends_capsule_id: original.capsule_id, amends_capsule_hash: capsuleHash(original), reason, amended_fields: amendedFields, amender_ref: amenderRef };
-  return lock({ body }, { key, prev, state, attestation, signedAt });
+  return lock({ body }, { key, prev, state, attestation, signedAt, ...(capsuleId ? { capsuleId } : {}) });
 }
 
 /** Chain scope: one chain per (tenant, educator, local session date). */

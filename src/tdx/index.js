@@ -9,4 +9,5 @@ module.exports = {
   ...require('./seal'),
   ...require('./schema'),
   ...require('./countersign'),
+  ...require('./codes'),
 };

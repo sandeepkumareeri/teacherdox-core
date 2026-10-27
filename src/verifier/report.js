@@ -4,6 +4,8 @@
 // returns one report. It runs on either implementation (reference node:crypto or
 // WebCrypto), passed as `impl`; functions may be sync or async.
 
+const { errorCodes } = require('../tdx/codes');
+
 const isCapsule = x => x && x.format === 'tdx';
 const isSeal = x => x && x.type === 'tdx-day-seal';
 const isCountersig = x => x && x.type === 'tdx-countersignature';
@@ -44,7 +46,7 @@ function summary(c) {
 }
 
 /**
- * → { ok, capsules[], days[], countersignatures[], errors[], registry_source }
+ * → { ok, codes[], capsules[], days[], countersignatures[], errors[], registry_source }
  * registry: the published key registry to trust. A registry embedded in the input is used
  * only when none is given, and the report says so (an attacker can embed their own keys).
  */
@@ -63,7 +65,7 @@ async function verifyBundle(input, registry, impl) {
     const r = await impl.verifyCapsule(c, reg);
     hashById.set(c.capsule_id, r.hash);
     const state = c.body && c.body.lifecycle && c.body.lifecycle.state;
-    capsules.push({ capsule_id: c.capsule_id, entry_id: c.body && c.body.entry_id, state, ok: r.ok, hash: r.hash, errors: r.errors, effective: effective.has(c.capsule_id), summary: summary(c) });
+    capsules.push({ capsule_id: c.capsule_id, entry_id: c.body && c.body.entry_id, state, ok: r.ok, hash: r.hash, errors: r.errors, codes: errorCodes(r.errors), effective: effective.has(c.capsule_id), summary: summary(c) });
   }
 
   const days = [];
@@ -100,6 +102,7 @@ async function verifyBundle(input, registry, impl) {
 
   return {
     ok: errors.length === 0 && capsules.every(c => c.ok),
+    codes: errorCodes([...errors, ...capsules.flatMap(c => c.errors)]),
     registry_source: registry ? 'given' : got.registry ? 'embedded in the input (only as trustworthy as its source)' : 'none',
     capsules, days, countersignatures, errors,
   };

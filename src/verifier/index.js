@@ -17,6 +17,7 @@ const verifyWeb = (input, registry) => verifyBundle(input, registry, web);
 const ROOT = path.join(__dirname, '../..');
 const BROWSER_MODULES = [
   ['../tdx/canonical', 'src/tdx/canonical.js'],
+  ['../tdx/codes', 'src/tdx/codes.js'],
   ['../../spec/schema/tdx-2.0.schema.json', 'spec/schema/tdx-2.0.schema.json'],
   ['../tdx/schema', 'src/tdx/schema.js'],
   ['./webverify', 'src/verifier/webverify.js'],
