@@ -31,5 +31,6 @@ jobs:
           META_API_KEY: ${{ secrets.META_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          GEMINI_BACKEND: ${{ vars.GEMINI_BACKEND }}
           LIVE_AUDIO_DIR: /tmp/audio
         run: node scripts/engine-live.js
