@@ -9,7 +9,9 @@ on:
   push:
     branches: ['claude/**']
     paths:
-      - 'eval/**'
+      - 'eval/*.js'
+      - 'eval/*.py'
+      - 'eval/cases.json'
       - '.github/workflows/eval.yml'
 permissions:
   contents: read

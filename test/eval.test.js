@@ -22,15 +22,17 @@ test('subject: spelling aliases only — Maths = Mathematics, Biology ≠ Scienc
 
 test('homework: every marker present; no homework means none recorded', () => {
   const t = { cohort: null, subject: 'x', unit: 'x', assignments: ['3.2'], topics: [] };
-  assert.equal(scoreRecord(t, rec({}, { assignments: [{ text: 'Ex 3.2 Q1-5' }] })).assignments, true);
-  assert.equal(scoreRecord(t, rec({}, { assignments: [{ text: 'Ex 3.3' }] })).assignments, false);
-  assert.equal(scoreRecord({ ...t, assignments: [] }, rec({}, { assignments: [{ text: 'Revise' }] })).assignments, false);
+  const s = { subject: 'Mathematics' };
+  assert.equal(scoreRecord(t, rec(s, { assignments: [{ text: 'Ex 3.2 Q1-5' }] })).assignments, true);
+  assert.equal(scoreRecord(t, rec(s, { assignments: [{ text: 'Ex 3.3' }] })).assignments, false);
+  assert.equal(scoreRecord({ ...t, assignments: [] }, rec(s, { assignments: [{ text: 'Revise' }] })).assignments, false);
+  assert.equal(scoreRecord({ ...t, assignments: [] }, rec(s, {})).assignments, true);
 });
 
 test('topics: a short keyword never matches by accident', () => {
   const t = { cohort: null, subject: 'x', unit: 'x', assignments: [], topics: ['lcm'] };
   assert.equal(scoreRecord(t, rec({}, { title: 'Numbers' })).topics, false);
-  assert.equal(scoreRecord(t, rec({}, { topics: ['LCM'] })).topics, true);
+  assert.equal(scoreRecord(t, rec({}, { title: 'Fractions', topics: ['LCM'] })).topics, true);
 });
 
 test('every case has complete ground truth', () => {
@@ -38,4 +40,9 @@ test('every case has complete ground truth', () => {
     for (const k of ['cohort', 'subject', 'unit', 'assignments', 'topics']) assert.ok(k in c.truth, `${c.id}.${k}`);
     assert.ok(c.truth.topics.length > 0, c.id);
   }
+});
+
+test('a held record with no content scores zero, even where the truth is "no homework"', () => {
+  const t = { cohort: '9A', subject: 'Science', unit: 'Photosynthesis', assignments: [], topics: ['photosynthesis'] };
+  assert.deepEqual(Object.values(scoreRecord(t, rec({}, {}))), [false, false, false, false, false]);
 });

@@ -111,8 +111,11 @@ const fieldAcc = rows => rows.length ? mean(rows.map(r => FIELDS.filter(f => r.f
 function summarise({ config, rows }) {
   const ok = rows.filter(r => r.ok);
   const priced = ok.filter(r => r.cost_usd != null);
+  const errors = rows.filter(r => !r.ok);
   return {
     config, label: LABEL[config], n: rows.length, produced: ok.length,
+    // Most cases failing on API errors measures the account, not the model: report it, compare nothing.
+    comparable: errors.length <= rows.length / 2, first_error: errors[0]?.error || null,
     field_accuracy: fieldAcc(rows), by_field: Object.fromEntries(FIELDS.map(f => [f, acc(rows, f)])),
     boards: fieldAcc(rows.filter(r => r.kind === 'board')),
     voices_by_lang: Object.fromEntries([...new Set(rows.filter(r => r.kind === 'voice').map(r => r.lang))].map(l => [l, fieldAcc(rows.filter(r => r.kind === 'voice' && r.lang === l))])),
@@ -128,7 +131,8 @@ const p100 = x => (x == null ? '—' : `${Math.round(x * 100)}%`);
 const secs = x => (x == null ? '—' : `${(x / 1000).toFixed(1)} s`);
 
 function markdown(results, meta) {
-  const run = results.filter(r => !r.skip).map(summarise);
+  const all = results.filter(r => !r.skip).map(summarise);
+  const run = all.filter(s => s.comparable);
   const cols = run.map(s => s.label);
   const row = (name, f) => `| ${name} | ${run.map(f).join(' | ')} |`;
   const langs = [...new Set(run.flatMap(s => Object.keys(s.voices_by_lang)))];
@@ -136,7 +140,9 @@ function markdown(results, meta) {
     '# Evaluation results', '',
     `Run: ${meta.run_url || 'local'} · commit \`${meta.sha || 'local'}\` · ${meta.date}`, '',
     `**${meta.cases.boards} synthetic boards** (rendered from text: chalk, whiteboard, tilted, faded, cluttered) and **${meta.cases.voices} synthetic voice notes** (espeak-ng, OGG/Opus like WhatsApp) — no real classroom data. Ground truth in \`eval/cases.json\`; scoring rules in \`eval/score.js\`. Synthetic voices are robotic, so voice numbers understate what real recordings would give, and differently per language. Small sample: treat differences of one or two cases as noise.`, '',
-    ...results.filter(r => r.skip).map(r => `- **${LABEL[r.config]}: not run** — ${r.skip}.`), results.some(r => r.skip) ? '' : null,
+    ...results.filter(r => r.skip).map(r => `- **${LABEL[r.config]}: not run** — ${r.skip}.`),
+    ...all.filter(s => !s.comparable).map(s => `- **${s.label}: not comparable** — ${s.n - s.produced} of ${s.n} cases failed on the API, not on the model (first error: \`${(s.first_error || '').slice(0, 160)}\`). Its numbers are left out.`),
+    results.some(r => r.skip) || all.some(s => !s.comparable) ? '' : null,
     `| | ${cols.join(' | ')} |`, `|---|${cols.map(() => '---').join('|')}|`,
     row('Records produced', s => `${s.produced} / ${s.n}`),
     row('**Field accuracy (all cases)**', s => `**${p100(s.field_accuracy)}**`),
@@ -152,12 +158,14 @@ function markdown(results, meta) {
     ...weaker(run), '',
     '## Per case', '',
     '<details><summary>Every case, every configuration</summary>', '',
-    '| case | ' + results.filter(r => !r.skip).map(r => LABEL[r.config]).join(' | ') + ' |', '|---|' + results.filter(r => !r.skip).map(() => '---').join('|') + '|',
-    ...results.find(r => !r.skip)?.rows.map(c => `| ${c.id} | ${results.filter(r => !r.skip).map(r => cell(r.rows.find(x => x.id === c.id))).join(' | ')} |`) || [],
+    '| case | ' + shown(results, run).map(r => LABEL[r.config]).join(' | ') + ' |', '|---|' + shown(results, run).map(() => '---').join('|') + '|',
+    ...(shown(results, run)[0]?.rows.map(c => `| ${c.id} | ${shown(results, run).map(r => cell(r.rows.find(x => x.id === c.id))).join(' | ')} |`) || []),
     '', '</details>', '',
   ].filter(x => x !== null);
   return lines.join('\n');
 }
+
+const shown = (results, run) => results.filter(r => !r.skip && run.some(s => s.config === r.config));
 
 function cell(r) {
   if (!r) return '—';
@@ -197,7 +205,8 @@ function weaker(run) {
   const md = markdown(results, meta);
   fs.writeFileSync(path.join(OUT, 'RESULTS.md'), md);
   console.log('\n' + md);
-  for (const s of results.filter(r => !r.skip).map(summarise)) notice(`${s.label}: ${p100(s.field_accuracy)} field accuracy`, `produced ${s.produced}/${s.n} · boards ${p100(s.boards)} · voices ${JSON.stringify(Object.fromEntries(Object.entries(s.voices_by_lang).map(([k, v]) => [k, p100(v)])))} · p50 ${secs(s.model_ms.p50)} · cost/record ${s.cost_per_record_usd ?? 'unknown'}`);
+  for (const s of results.filter(r => !r.skip).map(summarise).filter(x => x.comparable)) notice(`${s.label}: ${p100(s.field_accuracy)} field accuracy`, `produced ${s.produced}/${s.n} · boards ${p100(s.boards)} · voices ${JSON.stringify(Object.fromEntries(Object.entries(s.voices_by_lang).map(([k, v]) => [k, p100(v)])))} · p50 ${secs(s.model_ms.p50)} · cost/record ${s.cost_per_record_usd ?? 'unknown'}`);
   for (const r of results.filter(r => r.skip)) notice(`${LABEL[r.config]}: not run`, r.skip);
+  for (const s of results.filter(r => !r.skip).map(summarise).filter(x => !x.comparable)) notice(`${s.label}: not comparable`, `${s.n - s.produced}/${s.n} cases failed on the API: ${s.first_error}`);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + '\n');
 })();
