@@ -1,0 +1,45 @@
+# Baseten probe: prints the Baseten docs pages the provider is built on, then makes a few raw calls
+# to Muse Spark Open (meta-models/muse-spark-open-1026) on synthetic data — text, system role, JSON
+# schema, the synthetic board image, and synthetic English / Malayalam voice notes — and logs what
+# comes back. Needs the BASETEN_API_KEY repository secret.
+name: Baseten probe
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'scripts/baseten_probe.js'
+      - 'scripts/baseten_docs.sh'
+      - '.github/workflows/baseten-probe.yml'
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baseten docs (llms.txt + relevant pages)
+        run: bash scripts/baseten_docs.sh
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Synthetic voice notes (espeak-ng)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq espeak-ng ffmpeg >/dev/null
+          mkdir -p /tmp/audio
+          espeak-ng -v en -w /tmp/en-raw.wav "Class eight B, mathematics, period two. Adding fractions with unlike denominators. Homework is exercise three point two, questions one to five."
+          espeak-ng -v ml -w /tmp/ml-raw.wav "എട്ടാം ക്ലാസ് ബി, ഗണിതം. ഇന്ന് ഭിന്നസംഖ്യകളുടെ കൂട്ടൽ പഠിപ്പിച്ചു. ഗൃഹപാഠം അഭ്യാസം മൂന്ന് രണ്ട്."
+          ffmpeg -loglevel error -y -i /tmp/en-raw.wav -ac 1 -ar 16000 -c:a pcm_s16le /tmp/audio/en.wav
+          ffmpeg -loglevel error -y -i /tmp/ml-raw.wav -ac 1 -ar 16000 -c:a pcm_s16le /tmp/audio/ml.wav
+          ffmpeg -loglevel error -y -i /tmp/ml-raw.wav -c:a libopus -b:a 24k /tmp/audio/ml.ogg
+          ls -la /tmp/audio
+      - name: Probe
+        env:
+          BASETEN_API_KEY: ${{ secrets.BASETEN_API_KEY }}
+          PROBE_AUDIO_DIR: /tmp/audio
+        run: node scripts/baseten_probe.js
