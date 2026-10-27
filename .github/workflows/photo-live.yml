@@ -1,0 +1,43 @@
+# Photo pipeline on Meta's models, live, on the synthetic board photo (never educator data):
+# SAM 3.1 → crop → Muse Spark read → Muse Spark check → draft .tdx 2.0 capsule → signed + verified.
+# Results: annotations, the job summary, and the "photo-live" artifact (draft, signed capsule,
+# board crop, throwaway public key). Needs the META_API_KEY repository secret.
+name: Photo pipeline live
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'src/engine/**'
+      - 'src/tdx/**'
+      - 'packs/**'
+      - 'scripts/photo-live.js'
+      - '.github/workflows/photo-live.yml'
+permissions:
+  contents: read
+concurrency:
+  group: photo-live-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Unit tests
+        run: npm test
+      - name: ffmpeg (for the board crop)
+        run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null)
+      - name: Live run on Meta
+        env:
+          META_API_KEY: ${{ secrets.META_API_KEY }}
+          OUT_DIR: out
+        run: node scripts/photo-live.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: photo-live
+          path: out/
+          if-no-files-found: ignore
