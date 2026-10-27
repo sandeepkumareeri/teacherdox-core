@@ -31,7 +31,8 @@ photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  
 |---|---|
 | [`spec/00-core-architecture.md`](spec/00-core-architecture.md) | System architecture |
 | [`spec/tdx-2.0.md`](spec/tdx-2.0.md) | The `.tdx` 2.0 universal teaching record |
-| `src/tdx/` | Reference implementation: canonical form, signing, chain, verification, seals |
+| [`spec/schema/tdx-2.0.schema.json`](spec/schema/tdx-2.0.schema.json) | Normative JSON Schema (2020-12) |
+| `src/tdx/` | Reference implementation: canonical form, signing, chain, verification, seals, schema validator |
 | `test/` | Tests (`npm test`) |
 
 ## Quick start

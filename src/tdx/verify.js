@@ -7,10 +7,7 @@
 
 const { FORMAT, LOCKED, signingInput, capsuleHash, chainScope } = require('./capsule');
 const { verifyBytes, uuidv7Time } = require('./crypto');
-
-const UUIDV7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const REQUIRED = ['tenant', 'entry_id', 'actor.educator_ref', 'actor.institution_ref', 'actor.institution_type',
-  'session.kind', 'session.date', 'session.timezone', 'lifecycle.state'];
+const { validateCapsule } = require('./schema');
 
 const get = (o, path) => path.split('.').reduce((x, k) => (x == null ? undefined : x[k]), o);
 
@@ -19,9 +16,7 @@ function verifyCapsule(env, registry) {
   const errors = [];
   if (!env || typeof env !== 'object') return { ok: false, hash: null, errors: ['not an object'] };
   if (env.format !== FORMAT) errors.push(`format must be "${FORMAT}"`);
-  if (!/^2\.\d+\.\d+$/.test(String(env.spec_version || ''))) errors.push(`unsupported spec_version ${env.spec_version}`);
-  if (!UUIDV7.test(String(env.capsule_id || ''))) errors.push('capsule_id is not a UUIDv7');
-  for (const p of REQUIRED) if (get(env.body, p) == null || get(env.body, p) === '') errors.push(`missing body.${p}`);
+  errors.push(...validateCapsule(env).errors.map(e => `schema ${e}`));   // structure: spec/schema/tdx-2.0.schema.json
 
   const state = get(env.body, 'lifecycle.state');
   if (LOCKED.has(state)) {

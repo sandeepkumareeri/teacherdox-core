@@ -121,4 +121,10 @@ Institution packs MAY promote a field (e.g. `session.course` is critical for `un
 
 ## 6. Conformance (summary)
 
-A conformant producer MUST emit UUIDv7 ids, JCS-canonical signing input, content-addressed evidence, an IANA time zone, and per-step provenance. A conformant verifier MUST implement the RFC-002 §10 algorithm against `.tdx` 2.0. The JSON Schema in `schema/tdx-2.0.schema.json` is normative for structure.
+A conformant producer MUST emit UUIDv7 ids, JCS-canonical signing input, content-addressed evidence, an IANA time zone, and per-step provenance. A conformant verifier MUST implement the RFC-002 §10 algorithm against `.tdx` 2.0. The JSON Schema in [`schema/tdx-2.0.schema.json`](schema/tdx-2.0.schema.json) (JSON Schema 2020-12) is normative for structure; `src/tdx/schema.js` is a dependency-free validator for it, and `verifyCapsule` applies it.
+
+The schema allows unknown members everywhere (consumers MUST ignore them within 2.x). It additionally requires, for `auto_locked` / `confirmed_locked` capsules, a `signature`, a `chain` position and an `attestation`.
+
+## 7. Provenance step fields
+
+Each `provenance.steps[]` item has `step` (`locate | listen | read | check | score`), `capability` (`segment | transcribe | structure | verify | score`) and `provider`, and MAY carry `model`, `status` (`ok | fallback | skipped | failed`), `ms`, `cost_usd` (`null` when the provider's price is unknown — never estimated), `tokens { input, output }`, `evidence` (the evidence hash the step worked on) and `attempts[]` (each provider tried before the one that answered, with its error). `provenance` MAY also carry `flags[]` (fields the check step found contradicted or unsupported by the evidence) and `routing` (the confidence-routing decision: `auto_lock | confirm | hold`, the policy used, and which fields were auto-accepted or need confirmation).
