@@ -28,14 +28,39 @@ Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/td
 
 ## Status (27 Oct 2026)
 
-Done:
-- `spec/00-core-architecture.md`, `spec/tdx-2.0.md`.
-- `src/tdx/` trust layer: RFC 8785 canonical JSON, UUIDv7, Ed25519 keys/sign/verify with validity &
-  revocation, capsule hash, `draft` → `lock` (auto/confirmed) with per-educator daily hash chain,
-  `amend` (new capsule, same entry_id), `verifyCapsule` / `verifyDay` (RFC-002 §10), Merkle day seal
-  + inclusion proofs. 9 passing tests in `test/tdx.test.js`.
-- Meta Model API probed live (see `docs/meta-model-api-notes.md`): Muse Spark text + vision + JSON
-  schema, SAM 3.1 board box, Muse Voice Transcribe (WAV only; no Malayalam).
+Built on branch `claude/exciting-faraday-exxt9l` (ahead of the plan below; gaps against the quality
+bar are listed under "Missing"):
+- Spec: `spec/00-core-architecture.md`, `spec/tdx-2.0.md` (§6 schema conformance, §7 provenance step
+  fields, §8 countersignatures), normative `spec/schema/tdx-2.0.schema.json`.
+- `src/tdx/` trust layer (zero deps): RFC 8785 canonical JSON, UUIDv7, Ed25519 keys/sign/verify with
+  validity & revocation, capsule hash, `draft` → `lock` with per-educator daily hash chain, `amend`,
+  `verifyCapsule` / `verifyDay`, Merkle day seal + proofs, countersignatures, `schema.js` validator.
+- `src/engine/` Record Engine: router (`segment | transcribe | structure | check`, priority order,
+  fallback on error/timeout/unsupported input/consent/daily limit, provenance per call); providers
+  `meta` (SAM 3.1, Muse Voice Transcribe with OGG→WAV, Muse Spark strict JSON schema; refuses
+  `-contributor` models) and `fromGenerate(hostGenerate)` fallback; locate ∥ listen → read → check →
+  score → schema-valid draft capsule; nothing usable → held, never invented.
+- `packs/` + `src/packs/`: locales en, ml, te, hi, pt-BR, id, fr (non-English = draft translations);
+  6 institutions; countries IN, BR, ID, FR, SN; policies personal, school_compliance,
+  government_audit, low_connectivity; `describe()`.
+- `src/api/` REST `/v1` (capture → durable queue → draft; lock / confirm / amend / countersign; day
+  seal, proofs, export; public verify; telemetry), `src/verifier/` (reference + WebCrypto
+  implementation, identical reports), `verifier/` public page, `bin/tdx` (verify, validate, hash,
+  keygen, process, serve). Docs: `docs/api.md`, `packs/README.md`.
+- Tests: `npm test` (tdx, schema, vectors, engine, packs, verifier, api, queue).
+- Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) — **first
+  live run succeeded 27 Oct** (SAM box exact, read correct, check flagged the inferred subject → confirm;
+  12.4 s; see `docs/meta-model-api-notes.md`). `engine-live.yml` (all languages) not yet run.
+  `META_API_KEY` is set on this repo. The sandbox cannot reach api.meta.ai.
+
+Missing against the quality bar: API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
+CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; `eval/`; CI + CodeQL; SECURITY /
+CONTRIBUTING / CODE_OF_CONDUCT / CHANGELOG; quickstart + how-a-record-is-born + Mermaid diagrams;
+README rewrite; verifier page in brand style (#1B5E3B, DM Sans/Mono); tag v0.1.0.
+
+Open questions to check against dev.meta.ai (do not guess): system-role messages for Muse Spark (the
+engine puts instructions in the user turn); exact `languageBias` names beyond Hindi/English/Portuguese;
+Muse Spark per-token price (cost is recorded as `null` until known; ASR uses $0.18/h).
 
 ## Quality bar — build this like a top platform team would
 

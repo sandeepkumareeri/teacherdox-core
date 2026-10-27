@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://teacherdox.com/schema/tdx-2.0.schema.json",
+  "title": ".tdx 2.0 capsule",
+  "description": "Normative structure of a .tdx 2.0 capsule (spec/tdx-2.0.md). Unknown members are allowed within a major version and MUST be ignored by consumers; namespaced extensions belong in body.ext.",
+  "type": "object",
+  "required": ["format", "spec_version", "capsule_id", "body"],
+  "properties": {
+    "format": { "const": "tdx" },
+    "spec_version": { "type": "string", "pattern": "^2\\.[0-9]+\\.[0-9]+$" },
+    "capsule_id": { "$ref": "#/$defs/uuidv7" },
+    "body": { "$ref": "#/$defs/body" },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["body"],
+        "properties": { "body": { "required": ["lifecycle"], "properties": { "lifecycle": { "required": ["state"], "properties": { "state": { "enum": ["auto_locked", "confirmed_locked"] } } } } } }
+      },
+      "then": {
+        "required": ["signature"],
+        "properties": { "body": { "required": ["chain", "attestation"], "properties": { "chain": { "$ref": "#/$defs/chainPosition" } } } }
+      }
+    }
+  ],
+
+  "$defs": {
+    "uuidv7": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "utc": { "type": "string", "format": "date-time" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "nullableString": { "type": ["string", "null"] },
+    "stringList": { "type": "array", "items": { "type": "string" } },
+
+    "body": {
+      "type": "object",
+      "required": ["tenant", "entry_id", "actor", "session", "lifecycle"],
+      "properties": {
+        "tenant": { "$ref": "#/$defs/ref" },
+        "entry_id": { "$ref": "#/$defs/uuidv7" },
+        "actor": { "$ref": "#/$defs/actor" },
+        "locale": { "$ref": "#/$defs/bcp47" },
+        "record_locale": { "$ref": "#/$defs/bcp47" },
+        "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "session": { "$ref": "#/$defs/session" },
+        "source": { "$ref": "#/$defs/source" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "evidence_findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+        "content": { "$ref": "#/$defs/content" },
+        "curriculum": {
+          "type": "object",
+          "properties": { "framework": { "$ref": "#/$defs/nullableString" }, "tags": { "$ref": "#/$defs/stringList" } }
+        },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "lifecycle": {
+          "type": "object",
+          "required": ["state"],
+          "properties": { "state": { "enum": ["draft", "held", "auto_locked", "confirmed_locked"] } }
+        },
+        "attestation": { "type": ["object", "null"] },
+        "approval": { "type": ["object", "null"] },
+        "chain": { "type": ["object", "null"] },
+        "amendment": { "$ref": "#/$defs/amendment" },
+        "ext": { "type": "object" }
+      }
+    },
+
+    "bcp47": { "type": "string", "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$" },
+
+    "actor": {
+      "type": "object",
+      "required": ["educator_ref", "institution_ref", "institution_type"],
+      "properties": {
+        "educator_ref": { "$ref": "#/$defs/ref" },
+        "institution_ref": { "$ref": "#/$defs/ref" },
+        "institution_type": { "enum": ["school", "college", "university", "academy", "training", "independent"] }
+      }
+    },
+
+    "session": {
+      "type": "object",
+      "required": ["kind", "date", "timezone"],
+      "properties": {
+        "kind": { "enum": ["period", "lecture", "lab", "tutorial", "batch", "workshop", "other"] },
+        "date": { "type": "string", "format": "date" },
+        "starts_at": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?$" },
+        "timezone": { "type": "string", "pattern": "^(UTC|[A-Za-z]+(/[A-Za-z0-9_+-]+)+)$" },
+        "label": { "$ref": "#/$defs/nullableString" },
+        "cohort": { "$ref": "#/$defs/nullableString" },
+        "subject": { "$ref": "#/$defs/nullableString" },
+        "course": { "$ref": "#/$defs/nullableString" },
+        "unit": { "$ref": "#/$defs/nullableString" },
+        "duration_min": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+
+    "source": {
+      "type": "object",
+      "properties": {
+        "channel": { "enum": ["whatsapp", "web", "api", "sms", "app", "lms"] },
+        "capture_methods": { "type": "array", "items": { "enum": ["photo", "voice", "text", "document", "video"] } },
+        "captured_at": { "$ref": "#/$defs/utc" },
+        "lag_seconds": { "type": ["integer", "null"] }
+      }
+    },
+
+    "evidence": {
+      "type": "object",
+      "required": ["id", "media_type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/hash" },
+        "media_type": { "type": "string", "pattern": "^[a-z]+/[A-Za-z0-9.+-]+$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "role": { "type": "string" },
+        "duration_s": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "finding": {
+      "type": "object",
+      "required": ["evidence", "step", "finding"],
+      "properties": {
+        "evidence": { "$ref": "#/$defs/hash" },
+        "step": { "$ref": "#/$defs/stepName" },
+        "finding": { "type": "string" },
+        "box": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/confidence" } },
+        "language": { "type": ["string", "null"] },
+        "text_ref": { "type": ["string", "null"] }
+      }
+    },
+
+    "content": {
+      "type": "object",
+      "properties": {
+        "title": { "$ref": "#/$defs/nullableString" },
+        "topics": { "$ref": "#/$defs/stringList" },
+        "summary": { "$ref": "#/$defs/nullableString" },
+        "method": { "$ref": "#/$defs/nullableString" },
+        "assignments": {
+          "type": "array",
+          "items": { "type": "object", "required": ["text"], "properties": { "text": { "type": "string" }, "due": { "type": ["string", "null"], "format": "date" } } }
+        },
+        "next": { "$ref": "#/$defs/nullableString" },
+        "materials": { "$ref": "#/$defs/stringList" },
+        "notes": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+
+    "stepName": { "enum": ["locate", "listen", "read", "check", "score"] },
+
+    "provenance": {
+      "type": "object",
+      "required": ["pipeline_version", "steps"],
+      "properties": {
+        "pipeline_version": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["step", "capability", "provider"],
+            "properties": {
+              "step": { "$ref": "#/$defs/stepName" },
+              "capability": { "enum": ["segment", "transcribe", "structure", "check", "score"] },
+              "provider": { "type": "string" },
+              "model": { "type": ["string", "null"] },
+              "status": { "enum": ["ok", "fallback", "skipped", "failed"] },
+              "ms": { "type": ["integer", "null"], "minimum": 0 },
+              "cost_usd": { "type": ["number", "null"], "minimum": 0 },
+              "tokens": {
+                "type": ["object", "null"],
+                "properties": { "input": { "type": "integer", "minimum": 0 }, "output": { "type": "integer", "minimum": 0 } }
+              },
+              "attempts": {
+                "type": "array",
+                "items": { "type": "object", "required": ["provider"], "properties": { "provider": { "type": "string" }, "model": { "type": ["string", "null"] }, "error": { "type": "string" } } }
+              },
+              "evidence": { "$ref": "#/$defs/hash" }
+            }
+          }
+        },
+        "fallback_used": { "type": "boolean" },
+        "overall_confidence": { "oneOf": [{ "$ref": "#/$defs/confidence" }, { "type": "null" }] },
+        "field_confidence": { "type": "object", "additionalProperties": { "$ref": "#/$defs/confidence" } },
+        "flags": {
+          "type": "array",
+          "items": { "type": "object", "required": ["field", "issue"], "properties": { "field": { "type": "string" }, "issue": { "type": "string" }, "detail": { "type": "string" } } }
+        },
+        "routing": {
+          "type": "object",
+          "properties": {
+            "decision": { "enum": ["auto_lock", "confirm", "hold"] },
+            "policy_profile": { "type": "string" },
+            "policy_version": { "type": "string" },
+            "auto_accepted_fields": { "$ref": "#/$defs/stringList" },
+            "confirm_fields": { "$ref": "#/$defs/stringList" },
+            "reasons": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      }
+    },
+
+    "chainPosition": {
+      "type": "object",
+      "required": ["sequence_index", "prev_hash"],
+      "properties": {
+        "sequence_index": { "type": "integer", "minimum": 0 },
+        "prev_hash": { "oneOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }] }
+      }
+    },
+
+    "amendment": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["amends_capsule_id", "amends_capsule_hash"],
+          "properties": {
+            "amends_capsule_id": { "$ref": "#/$defs/uuidv7" },
+            "amends_capsule_hash": { "$ref": "#/$defs/hash" },
+            "reason": { "type": "string" },
+            "amended_fields": { "$ref": "#/$defs/stringList" },
+            "amender_ref": { "$ref": "#/$defs/ref" }
+          }
+        }
+      ]
+    },
+
+    "signature": {
+      "type": "object",
+      "required": ["alg", "key_id", "signed_at", "sig"],
+      "properties": {
+        "alg": { "const": "ed25519" },
+        "key_id": { "$ref": "#/$defs/ref" },
+        "signed_at": { "$ref": "#/$defs/utc" },
+        "sig": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" }
+      }
+    }
+  }
+}

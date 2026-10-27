@@ -1,0 +1,24 @@
+{
+  "type": "independent",
+  "session_kinds": [
+    "period",
+    "lecture",
+    "lab",
+    "tutorial",
+    "batch",
+    "workshop",
+    "other"
+  ],
+  "default_kind": "other",
+  "field_terms": {
+    "session.label": "field.label.session",
+    "session.cohort": "field.cohort.group",
+    "session.subject": "field.subject",
+    "session.course": "field.course",
+    "session.unit": "field.unit.unit",
+    "content.assignments": "field.assignments.assignment"
+  },
+  "promotions": {},
+  "approver_role": null,
+  "model_vocabulary": "an independent educator; sessions may be any kind"
+}

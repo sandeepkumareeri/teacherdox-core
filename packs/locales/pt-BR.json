@@ -1,0 +1,63 @@
+{
+  "locale": "pt-BR",
+  "name": "Portuguese (Brazil)",
+  "native_name": "Português (Brasil)",
+  "direction": "ltr",
+  "review": "draft translation, needs native-speaker review",
+  "messages": {
+    "status.auto_lock": "Registrado. Pronto para assinar.",
+    "status.confirm": "Registrado. Confira: {fields}.",
+    "status.hold.unusable": "Não foi possível ler isto. Envie de novo ou escreva o que você ensinou.",
+    "status.hold.irrelevant": "Isto não parece ser uma aula. Nada foi registrado.",
+    "status.hold.contradicted": "{field} não confere com o que foi enviado. Confira, por favor.",
+    "legend.guess": "⚠ = preenchido automaticamente, confira.",
+    "auto_sign": "Se você não assinar, será assinado automaticamente às {time}.",
+    "action.sign": "Assinar",
+    "action.view": "Ver registro",
+    "action.edit": "Editar",
+    "signed": {
+      "one": "1 registro assinado.",
+      "other": "{n} registros assinados."
+    },
+    "sent_to": "Enviado para: {approver}",
+    "digest": {
+      "one": "{date} · 1 registro",
+      "other": "{date} · {n} registros"
+    },
+    "late": "Enviado {days} dias depois da aula. Confirme, por favor."
+  },
+  "terms": {
+    "field.subject": "disciplina",
+    "field.course": "curso",
+    "field.programme": "programa",
+    "field.unit.chapter": "capítulo",
+    "field.unit.module": "módulo",
+    "field.unit.unit": "unidade",
+    "field.cohort.class": "turma",
+    "field.cohort.batch": "turma",
+    "field.cohort.section": "turma",
+    "field.cohort.group": "grupo",
+    "field.label.period": "aula",
+    "field.label.session": "sessão",
+    "field.title": "título",
+    "field.topics": "tópicos",
+    "field.summary": "resumo",
+    "field.method": "metodologia",
+    "field.assignments.homework": "tarefa de casa",
+    "field.assignments.assignment": "trabalho",
+    "field.next": "próxima aula",
+    "field.materials": "materiais",
+    "kind.period": "aula",
+    "kind.lecture": "aula",
+    "kind.lab": "laboratório",
+    "kind.tutorial": "monitoria",
+    "kind.batch": "turma",
+    "kind.workshop": "oficina",
+    "kind.other": "sessão",
+    "role.headmaster": "direção da escola",
+    "role.principal": "direção",
+    "role.hod": "coordenação do curso",
+    "role.owner": "responsável",
+    "role.supervisor": "supervisão"
+  }
+}

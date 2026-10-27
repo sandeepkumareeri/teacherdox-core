@@ -1,0 +1,21 @@
+{
+  "profile": "personal",
+  "version": "1",
+  "description": "An educator's own record (tutors, independents). Light checks; nothing waits for an approver.",
+  "min": {
+    "critical": 0.75,
+    "material": 0.5,
+    "soft": 0
+  },
+  "hold_below": {
+    "critical": 0.2
+  },
+  "steps": {
+    "locate": true,
+    "check": false
+  },
+  "require_check": false,
+  "max_capture_lag_days": null,
+  "allow_auto_lock": true,
+  "require_approval": false
+}

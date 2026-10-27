@@ -1,0 +1,21 @@
+{
+  "profile": "low_connectivity",
+  "version": "1",
+  "description": "Schools with poor networks: evidence often arrives days late, so late capture is accepted without extra confirmation; same quality bar as school_compliance.",
+  "min": {
+    "critical": 0.9,
+    "material": 0.75,
+    "soft": 0
+  },
+  "hold_below": {
+    "critical": 0.4
+  },
+  "steps": {
+    "locate": true,
+    "check": true
+  },
+  "require_check": true,
+  "max_capture_lag_days": 7,
+  "allow_auto_lock": true,
+  "require_approval": true
+}

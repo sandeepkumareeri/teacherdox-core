@@ -1,0 +1,76 @@
+{
+  "warning": "TEST KEY ONLY. The seed is public: anything signed with it proves nothing. Never use it for real records.",
+  "key_id": "tdx-test-2026",
+  "seed_hex": "7464782d746573742d766563746f72732d6e6f742d666f722d7265616c2d7573",
+  "public_key": {
+    "kid": "tdx-test-2026",
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+    "alg": "ed25519",
+    "valid_from": "2026-01-01T00:00:00Z",
+    "valid_to": null,
+    "revoked_at": null
+  },
+  "registries": {
+    "default": {
+      "keys": [
+        {
+          "kid": "tdx-test-2026",
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+          "alg": "ed25519",
+          "valid_from": "2026-01-01T00:00:00Z",
+          "valid_to": null,
+          "revoked_at": null
+        }
+      ]
+    },
+    "empty": {
+      "keys": []
+    },
+    "revoked": {
+      "keys": [
+        {
+          "kid": "tdx-test-2026",
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+          "alg": "ed25519",
+          "valid_from": "2026-01-01T00:00:00Z",
+          "valid_to": null,
+          "revoked_at": "2026-10-01T00:00:00Z"
+        }
+      ]
+    },
+    "expired": {
+      "keys": [
+        {
+          "kid": "tdx-test-2026",
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+          "alg": "ed25519",
+          "valid_from": "2026-01-01T00:00:00Z",
+          "valid_to": "2026-06-30T23:59:59Z",
+          "revoked_at": null
+        }
+      ]
+    },
+    "future": {
+      "keys": [
+        {
+          "kid": "tdx-test-2026",
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+          "alg": "ed25519",
+          "valid_from": "2027-01-01T00:00:00Z",
+          "valid_to": null,
+          "revoked_at": null
+        }
+      ]
+    }
+  }
+}

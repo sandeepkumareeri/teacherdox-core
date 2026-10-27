@@ -88,7 +88,7 @@
       { "step": "locate", "capability": "segment",    "provider": "meta", "model": "sam-3.1",              "ms": 820,  "cost_usd": 0.0004 },
       { "step": "listen", "capability": "transcribe", "provider": "meta", "model": "muse-voice-transcribe", "ms": 1640, "cost_usd": 0.0010 },
       { "step": "read",   "capability": "structure",  "provider": "meta", "model": "muse-spark",            "ms": 3100, "cost_usd": 0.0021 },
-      { "step": "check",  "capability": "verify",     "provider": "meta", "model": "muse-spark",            "ms": 1200, "cost_usd": 0.0008 }
+      { "step": "check",  "capability": "check",      "provider": "meta", "model": "muse-spark",            "ms": 1200, "cost_usd": 0.0008 }
     ],
     "fallback_used": false,
     "overall_confidence": 0.91,
@@ -121,4 +121,66 @@ Institution packs MAY promote a field (e.g. `session.course` is critical for `un
 
 ## 6. Conformance (summary)
 
-A conformant producer MUST emit UUIDv7 ids, JCS-canonical signing input, content-addressed evidence, an IANA time zone, and per-step provenance. A conformant verifier MUST implement the RFC-002 §10 algorithm against `.tdx` 2.0. The JSON Schema in `schema/tdx-2.0.schema.json` is normative for structure.
+A conformant producer MUST emit UUIDv7 ids, JCS-canonical signing input, content-addressed evidence, an IANA time zone, and per-step provenance. A conformant verifier MUST implement the RFC-002 §10 algorithm against `.tdx` 2.0. The JSON Schema in [`schema/tdx-2.0.schema.json`](schema/tdx-2.0.schema.json) (JSON Schema 2020-12) is normative for structure; `src/tdx/schema.js` is a dependency-free validator for it, and `verifyCapsule` applies it.
+
+The schema allows unknown members everywhere (consumers MUST ignore them within 2.x). It additionally requires, for `auto_locked` / `confirmed_locked` capsules, a `signature`, a `chain` position and an `attestation`.
+
+## 7. Provenance step fields
+
+Each `provenance.steps[]` item has `step` (`locate | listen | read | check | score`), `capability` (`segment | transcribe | structure | check | score`) and `provider`, and MAY carry `model`, `status` (`ok | fallback | skipped | failed`), `ms`, `cost_usd` (`null` when the provider's price is unknown — never estimated), `tokens { input, output }`, `evidence` (the evidence hash the step worked on) and `attempts[]` (each provider tried before the one that answered, with its error). `provenance` MAY also carry `flags[]` (fields the check step found contradicted or unsupported by the evidence) and `routing` (the confidence-routing decision: `auto_lock | confirm | hold`, the policy used, and which fields were auto-accepted or need confirmation).
+
+## 8. Countersignatures
+
+An approver (headmaster, head of department, supervisor — the role comes from the institution pack) attests a locked record or a whole sealed day. Because signed capsules are immutable, a countersignature is a separate signed statement that names its target by hash; the capsule's `approval` member stays `null` in capsules produced by the reference implementation.
+
+```jsonc
+{
+  "type": "tdx-countersignature",
+  "target": { "type": "capsule", "id": "<capsule_id>", "hash": "sha256:…" },   // or { "type": "day_seal", "id": "<day scope>", … }
+  "approver_ref": "e_…", "role": "headmaster", "decision": "approved",          // approved | returned
+  "note": null, "signed_at": "2026-10-28T12:05:00Z",
+  "signature": { "alg": "ed25519", "key_id": "…", "sig": "…" }                  // over JCS of everything but `signature`
+}
+```
+
+The target hash is the capsule hash (§1), or `sha256(JCS(seal))` for a day seal. A verifier MUST check the signature and the key's validity at `signed_at` as for capsules, and MUST check the target hash against the record or seal it is shown with. Countersigning a day seal attests every record the seal covers; when records are added to a day after it was sealed, the day is sealed again and the earlier countersignature keeps pointing at the earlier seal.
+
+## 9. Verification failure codes
+
+A verifier SHOULD report failures with these stable codes (messages for people may differ between implementations; the codes MUST NOT). The test vectors (§10) state expected codes.
+
+| Code | Meaning |
+|---|---|
+| `format_invalid` | `format` is not `"tdx"`. |
+| `schema_invalid` | The capsule does not match the normative schema (§6). |
+| `missing_signature` | A locked capsule has no `signature`. |
+| `unknown_key` | The signature's `key_id` is not in the key registry. |
+| `unsupported_algorithm` | `signature.alg` is not `ed25519`, or the key is not an Ed25519 key. |
+| `key_not_yet_valid` | `signed_at` is before the key's `valid_from`. |
+| `key_expired` | `signed_at` is after the key's `valid_to`. |
+| `key_revoked` | `signed_at` is at or after the key's `revoked_at`. |
+| `timestamp_invalid` | `signed_at` is not a timestamp. |
+| `signature_mismatch` | The Ed25519 signature does not verify over the signing input (§1): the capsule was altered or signed with another key. |
+| `missing_chain_position` | A locked capsule has no `chain.sequence_index`. |
+| `missing_attestation` | A locked capsule has no `attestation`. |
+| `unknown_state` | `lifecycle.state` is not a defined state. |
+| `sequence_gap` | An educator-day's sequence is not 0, 1, 2… without gaps or duplicates: a record is missing or was inserted. |
+| `first_prev_hash_not_null` | The day's first record has a `prev_hash`. |
+| `chain_broken` | A record's `prev_hash` is not the capsule hash of the record before it. |
+| `amendment_unknown_target` | A correction names a capsule that is not in the day. |
+| `amendment_hash_mismatch` | A correction names its original by id, but with another hash. |
+| `amendment_changes_entry` | A correction has a different `entry_id` from its original. |
+| `amendment_order` | A correction amends a capsule created after it. |
+| `seal_signature_invalid` | A day seal's signature does not verify. |
+| `seal_root_mismatch` | The seal's Merkle root is not the root over the given records. |
+| `seal_count_mismatch` | The seal covers a different number of records than were given. |
+| `seal_without_records` | A seal was given without the records of its day. |
+| `countersignature_invalid` | A countersignature's signature does not verify, or its statement is malformed. |
+| `countersignature_wrong_target` | A countersignature is for another record or seal. |
+| `countersignature_target_missing` | The record or seal a countersignature names was not provided. |
+
+Codes that preempt others: a capsule that fails the schema usually also yields more specific codes; consumers SHOULD act on any failure code, not on one in particular.
+
+## 10. Test vectors
+
+`spec/vectors/` holds conformance vectors any implementation, in any language, can check itself against: the RFC 8785 canonical form, single capsules (valid ones with their exact signing input and capsule hash; invalid ones with the failure codes they MUST produce), educator-days (chain rules, amendments, the effective record per entry), Merkle roots and inclusion proofs, day seals, and countersignatures. They are signed with a test key whose seed is published in `keys.json` — it MUST NOT be used for real records. The vectors are generated by `scripts/make-vectors.js` and are deterministic: regenerating them gives byte-identical files.

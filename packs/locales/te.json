@@ -1,0 +1,63 @@
+{
+  "locale": "te",
+  "name": "Telugu",
+  "native_name": "తెలుగు",
+  "direction": "ltr",
+  "review": "draft translation, needs native-speaker review",
+  "messages": {
+    "status.auto_lock": "నమోదైంది. సంతకానికి సిద్ధం.",
+    "status.confirm": "నమోదైంది. దయచేసి ఇవి చూడండి: {fields}.",
+    "status.hold.unusable": "దీన్ని చదవలేకపోయాం. మళ్లీ పంపండి లేదా ఏం బోధించారో టైప్ చేయండి.",
+    "status.hold.irrelevant": "ఇది తరగతికి సంబంధించినదిగా లేదు. ఏమీ నమోదు చేయలేదు.",
+    "status.hold.contradicted": "{field} పంపినదానితో సరిపోలడం లేదు. దయచేసి చూడండి.",
+    "legend.guess": "⚠ = ఆటోమేటిక్‌గా నింపినది, ఒకసారి చూడండి.",
+    "auto_sign": "మీరు సంతకం చేయకపోతే {time}కి ఆటోమేటిక్‌గా సంతకం అవుతుంది.",
+    "action.sign": "సంతకం చేయండి",
+    "action.view": "రికార్డు చూడండి",
+    "action.edit": "మార్చండి",
+    "signed": {
+      "one": "1 రికార్డుపై సంతకం అయింది.",
+      "other": "{n} రికార్డులపై సంతకం అయింది."
+    },
+    "sent_to": "పంపబడింది: {approver}",
+    "digest": {
+      "one": "{date} · 1 రికార్డు",
+      "other": "{date} · {n} రికార్డులు"
+    },
+    "late": "తరగతి అయిన {days} రోజుల తర్వాత పంపారు. దయచేసి నిర్ధారించండి."
+  },
+  "terms": {
+    "field.subject": "విషయం",
+    "field.course": "కోర్సు",
+    "field.programme": "ప్రోగ్రామ్",
+    "field.unit.chapter": "పాఠం",
+    "field.unit.module": "మాడ్యూల్",
+    "field.unit.unit": "యూనిట్",
+    "field.cohort.class": "తరగతి",
+    "field.cohort.batch": "బ్యాచ్",
+    "field.cohort.section": "సెక్షన్",
+    "field.cohort.group": "గ్రూప్",
+    "field.label.period": "పీరియడ్",
+    "field.label.session": "సెషన్",
+    "field.title": "శీర్షిక",
+    "field.topics": "అంశాలు",
+    "field.summary": "సారాంశం",
+    "field.method": "పద్ధతి",
+    "field.assignments.homework": "హోంవర్క్",
+    "field.assignments.assignment": "అసైన్‌మెంట్",
+    "field.next": "తదుపరి తరగతి",
+    "field.materials": "సామగ్రి",
+    "kind.period": "పీరియడ్",
+    "kind.lecture": "లెక్చర్",
+    "kind.lab": "ల్యాబ్",
+    "kind.tutorial": "ట్యుటోరియల్",
+    "kind.batch": "బ్యాచ్",
+    "kind.workshop": "వర్క్‌షాప్",
+    "kind.other": "సెషన్",
+    "role.headmaster": "ప్రధానోపాధ్యాయులు",
+    "role.principal": "ప్రిన్సిపాల్",
+    "role.hod": "విభాగాధిపతి",
+    "role.owner": "యజమాని",
+    "role.supervisor": "సూపర్‌వైజర్"
+  }
+}

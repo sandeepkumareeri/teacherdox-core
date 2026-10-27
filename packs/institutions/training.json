@@ -1,0 +1,19 @@
+{
+  "type": "training",
+  "session_kinds": [
+    "workshop",
+    "other"
+  ],
+  "default_kind": "workshop",
+  "field_terms": {
+    "session.label": "field.label.session",
+    "session.cohort": "field.cohort.group",
+    "session.subject": "field.subject",
+    "session.course": "field.programme",
+    "session.unit": "field.unit.module",
+    "content.assignments": "field.assignments.assignment"
+  },
+  "promotions": {},
+  "approver_role": "role.supervisor",
+  "model_vocabulary": "a corporate or vocational trainer; sessions are workshops; course is the programme; unit is the module"
+}

@@ -1,0 +1,87 @@
+{
+  "description": "RFC 8785 canonical form. canonical = JCS(input); sha256 over its UTF-8 bytes.",
+  "cases": [
+    {
+      "id": "key-order",
+      "input": {
+        "b": 1,
+        "a": 2,
+        "c": {
+          "z": true,
+          "y": null
+        }
+      },
+      "canonical": "{\"a\":2,\"b\":1,\"c\":{\"y\":null,\"z\":true}}",
+      "sha256": "sha256:e238c7551aeab3a4d63763242b13268386f4975976255faf6cd722430bbe8800"
+    },
+    {
+      "id": "nested-arrays",
+      "input": {
+        "list": [
+          3,
+          1,
+          [
+            2,
+            {
+              "y": 1,
+              "x": 2
+            }
+          ]
+        ],
+        "empty": [],
+        "obj": {}
+      },
+      "canonical": "{\"empty\":[],\"list\":[3,1,[2,{\"x\":2,\"y\":1}]],\"obj\":{}}",
+      "sha256": "sha256:70494687b6f76e9a9aef2f34d0c3731d41a7f63ca24e30845f42f96e3bc573c6"
+    },
+    {
+      "id": "numbers",
+      "input": {
+        "int": 42,
+        "neg": -7,
+        "frac": 4.5,
+        "small": 0.002,
+        "big": 1e+30,
+        "tiny": 1e-7,
+        "zero": 0,
+        "negzero": 0
+      },
+      "canonical": "{\"big\":1e+30,\"frac\":4.5,\"int\":42,\"neg\":-7,\"negzero\":0,\"small\":0.002,\"tiny\":1e-7,\"zero\":0}",
+      "sha256": "sha256:fc3af65599f2623add006c3f94c913331cbb50a2014832d04eded4630d0d4f5c"
+    },
+    {
+      "id": "strings-escapes",
+      "input": {
+        "s": "line\nbreak\ttab \"quote\" \\ back",
+        "ctl": "\u0001\u001f"
+      },
+      "canonical": "{\"ctl\":\"\\u0001\\u001f\",\"s\":\"line\\nbreak\\ttab \\\"quote\\\" \\\\ back\"}",
+      "sha256": "sha256:63b23c08f5cb9d522add77efbe9a7943d2e7fbef0505c9658fae947ede67aa45"
+    },
+    {
+      "id": "unicode",
+      "input": {
+        "ml": "മലയാളം",
+        "te": "తెలుగు",
+        "emoji": "😀",
+        "euro": "€"
+      },
+      "canonical": "{\"emoji\":\"😀\",\"euro\":\"€\",\"ml\":\"മലയാളം\",\"te\":\"తెలుగు\"}",
+      "sha256": "sha256:854b3993419bee7f5b13934f42725a3412eb2191b959d1b55e2502fb207b8781"
+    },
+    {
+      "id": "key-order-utf16",
+      "input": {
+        "1": "one",
+        "€": "euro",
+        "\r": "cr",
+        "דּ": "hebrew",
+        "😀": "emoji",
+        "": "ctl",
+        "ö": "o-umlaut"
+      },
+      "canonical": "{\"\\r\":\"cr\",\"1\":\"one\",\"\":\"ctl\",\"ö\":\"o-umlaut\",\"€\":\"euro\",\"😀\":\"emoji\",\"דּ\":\"hebrew\"}",
+      "sha256": "sha256:d9c12f9b52a3d590143b8f1a3e23aa95afdce15f8d8801c754b307d4a092821b"
+    }
+  ]
+}

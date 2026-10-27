@@ -1,0 +1,21 @@
+{
+  "profile": "government_audit",
+  "version": "1",
+  "description": "Records used for inspection or accreditation: strict thresholds, every record confirmed by a person.",
+  "min": {
+    "critical": 0.95,
+    "material": 0.85,
+    "soft": 0.5
+  },
+  "hold_below": {
+    "critical": 0.5
+  },
+  "steps": {
+    "locate": true,
+    "check": true
+  },
+  "require_check": true,
+  "max_capture_lag_days": 0,
+  "allow_auto_lock": false,
+  "require_approval": true
+}

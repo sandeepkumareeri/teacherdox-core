@@ -1,0 +1,62 @@
+{
+  "locale": "en",
+  "name": "English",
+  "native_name": "English",
+  "direction": "ltr",
+  "messages": {
+    "status.auto_lock": "Recorded. Ready to sign.",
+    "status.confirm": "Recorded. Please check: {fields}.",
+    "status.hold.unusable": "This could not be read. Send it again, or type what you taught.",
+    "status.hold.irrelevant": "This does not look like a class. Nothing was recorded.",
+    "status.hold.contradicted": "{field} does not match what was sent. Please check it.",
+    "legend.guess": "⚠ = filled in automatically, please check.",
+    "auto_sign": "If you do not sign, it is signed automatically at {time}.",
+    "action.sign": "Sign",
+    "action.view": "View record",
+    "action.edit": "Edit",
+    "signed": {
+      "one": "1 record signed.",
+      "other": "{n} records signed."
+    },
+    "sent_to": "Sent to: {approver}",
+    "digest": {
+      "one": "{date} · 1 record",
+      "other": "{date} · {n} records"
+    },
+    "late": "Sent {days} days after the class. Please confirm it."
+  },
+  "terms": {
+    "field.subject": "subject",
+    "field.course": "course",
+    "field.programme": "programme",
+    "field.unit.chapter": "chapter",
+    "field.unit.module": "module",
+    "field.unit.unit": "unit",
+    "field.cohort.class": "class",
+    "field.cohort.batch": "batch",
+    "field.cohort.section": "section",
+    "field.cohort.group": "group",
+    "field.label.period": "period",
+    "field.label.session": "session",
+    "field.title": "title",
+    "field.topics": "topics",
+    "field.summary": "summary",
+    "field.method": "method",
+    "field.assignments.homework": "homework",
+    "field.assignments.assignment": "assignment",
+    "field.next": "next class",
+    "field.materials": "materials",
+    "kind.period": "period",
+    "kind.lecture": "lecture",
+    "kind.lab": "lab",
+    "kind.tutorial": "tutorial",
+    "kind.batch": "batch",
+    "kind.workshop": "workshop",
+    "kind.other": "session",
+    "role.headmaster": "headmaster",
+    "role.principal": "principal",
+    "role.hod": "head of department",
+    "role.owner": "owner",
+    "role.supervisor": "supervisor"
+  }
+}

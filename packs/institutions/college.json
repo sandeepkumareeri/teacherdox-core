@@ -1,0 +1,23 @@
+{
+  "type": "college",
+  "session_kinds": [
+    "lecture",
+    "lab",
+    "tutorial",
+    "other"
+  ],
+  "default_kind": "lecture",
+  "field_terms": {
+    "session.label": "field.label.session",
+    "session.cohort": "field.cohort.section",
+    "session.subject": "field.subject",
+    "session.course": "field.course",
+    "session.unit": "field.unit.unit",
+    "content.assignments": "field.assignments.assignment"
+  },
+  "promotions": {
+    "session.course": "critical"
+  },
+  "approver_role": "role.hod",
+  "model_vocabulary": "a college lecturer; sessions are lectures or labs; cohort is year/section; course is the paper or course code"
+}

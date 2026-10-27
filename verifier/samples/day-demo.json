@@ -1,0 +1,539 @@
+{
+  "capsules": [
+    {
+      "format": "tdx",
+      "spec_version": "2.0.0",
+      "capsule_id": "01a17cb2-a2d7-7603-be90-f2fee09db646",
+      "body": {
+        "tenant": "t_demo",
+        "locale": "ml-IN",
+        "record_locale": "en",
+        "country": "IN",
+        "actor": {
+          "educator_ref": "e_demo_teacher",
+          "institution_ref": "i_demo_school",
+          "institution_type": "school"
+        },
+        "session": {
+          "kind": "period",
+          "date": "2026-10-28",
+          "timezone": "Asia/Kolkata",
+          "label": "P2",
+          "cohort": "8B",
+          "subject": "Mathematics",
+          "unit": "Fractions"
+        },
+        "source": {
+          "channel": "whatsapp",
+          "capture_methods": [
+            "photo",
+            "voice"
+          ],
+          "captured_at": "2026-10-28T04:52:05Z"
+        },
+        "evidence": [
+          {
+            "id": "sha256:f8f11ce685b1b5f26a1b9d2fda3c00d079cd7aae3cf9285a82bd76508009b741",
+            "media_type": "image/jpeg",
+            "role": "board"
+          },
+          {
+            "id": "sha256:325caf57a5f15fe82434bf36770cbc6f3ec9be3efce425892eff8615f9a3bde5",
+            "media_type": "audio/ogg",
+            "role": "voice_note"
+          }
+        ],
+        "content": {
+          "title": "Adding fractions with unlike denominators",
+          "topics": [
+            "Fractions",
+            "LCM"
+          ],
+          "assignments": [
+            {
+              "text": "Ex 3.2 Q1-5",
+              "due": null
+            }
+          ]
+        },
+        "provenance": {
+          "pipeline_version": "core-0.2",
+          "steps": [
+            {
+              "step": "locate",
+              "capability": "segment",
+              "provider": "meta",
+              "model": "sam-3.1",
+              "status": "ok"
+            },
+            {
+              "step": "listen",
+              "capability": "transcribe",
+              "provider": "meta",
+              "model": "muse-voice-transcribe-1.0",
+              "status": "ok"
+            },
+            {
+              "step": "read",
+              "capability": "structure",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            },
+            {
+              "step": "check",
+              "capability": "check",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            }
+          ],
+          "fallback_used": false,
+          "overall_confidence": 0.93,
+          "field_confidence": {
+            "session.cohort": 0.97,
+            "session.subject": 0.96
+          }
+        },
+        "ext": {
+          "org.teacherdox.sample": "synthetic demo record; not produced by a live model run"
+        },
+        "entry_id": "01a17cb2-a2d6-72c5-8253-7e053d3ee65c",
+        "lifecycle": {
+          "state": "confirmed_locked"
+        },
+        "chain": {
+          "sequence_index": 0,
+          "prev_hash": null
+        },
+        "attestation": {
+          "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+          "mode": "human",
+          "policy_profile": "school_compliance",
+          "policy_version": "1",
+          "confirmed_fields": [],
+          "confirmation": {
+            "by": "e_demo_teacher",
+            "at": "2026-10-28T11:00:00Z",
+            "channel": "whatsapp"
+          }
+        }
+      },
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "k_demo_sample",
+        "signed_at": "2026-10-28T11:00:00Z",
+        "sig": "UnmZ33cp1pJ6ounP8DL5doal30P97wuuwkT68KMf7jgmxqUm421P_KO9oWKtjMSkSuaBf4SQueeYEgi9TqbeCA"
+      }
+    },
+    {
+      "format": "tdx",
+      "spec_version": "2.0.0",
+      "capsule_id": "01a17cb2-a2dc-7892-8e2c-4303fd0b1290",
+      "body": {
+        "tenant": "t_demo",
+        "locale": "ml-IN",
+        "record_locale": "en",
+        "country": "IN",
+        "actor": {
+          "educator_ref": "e_demo_teacher",
+          "institution_ref": "i_demo_school",
+          "institution_type": "school"
+        },
+        "session": {
+          "kind": "period",
+          "date": "2026-10-28",
+          "timezone": "Asia/Kolkata",
+          "label": "P4",
+          "cohort": "9A",
+          "subject": "Mathematics",
+          "unit": "Linear equations"
+        },
+        "source": {
+          "channel": "whatsapp",
+          "capture_methods": [
+            "photo",
+            "voice"
+          ],
+          "captured_at": "2026-10-28T06:40:12Z"
+        },
+        "evidence": [
+          {
+            "id": "sha256:d4c55949c9661771925ede61f778804b2a605876f709a478ee0e18850603a2fd",
+            "media_type": "image/jpeg",
+            "role": "board"
+          },
+          {
+            "id": "sha256:e1a72e55382494a8b8b3933d5263f8cb5a6dc8e653e630474d46be1b9b7af8af",
+            "media_type": "audio/ogg",
+            "role": "voice_note"
+          }
+        ],
+        "content": {
+          "title": "Solving equations in one variable",
+          "topics": [
+            "Linear equations"
+          ],
+          "assignments": [
+            {
+              "text": "Ex 2.1 Q1-4",
+              "due": null
+            }
+          ]
+        },
+        "provenance": {
+          "pipeline_version": "core-0.2",
+          "steps": [
+            {
+              "step": "locate",
+              "capability": "segment",
+              "provider": "meta",
+              "model": "sam-3.1",
+              "status": "ok"
+            },
+            {
+              "step": "listen",
+              "capability": "transcribe",
+              "provider": "meta",
+              "model": "muse-voice-transcribe-1.0",
+              "status": "ok"
+            },
+            {
+              "step": "read",
+              "capability": "structure",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            },
+            {
+              "step": "check",
+              "capability": "check",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            }
+          ],
+          "fallback_used": false,
+          "overall_confidence": 0.93,
+          "field_confidence": {
+            "session.cohort": 0.97,
+            "session.subject": 0.96
+          }
+        },
+        "ext": {
+          "org.teacherdox.sample": "synthetic demo record; not produced by a live model run"
+        },
+        "entry_id": "01a17cb2-a2dc-761d-ab11-3bdfe86130ec",
+        "lifecycle": {
+          "state": "confirmed_locked"
+        },
+        "chain": {
+          "sequence_index": 1,
+          "prev_hash": "sha256:b88088afd3dec056704e7c709fb40e0c0acf724350fb15b2aaa2825cd2babbf7"
+        },
+        "attestation": {
+          "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+          "mode": "human",
+          "policy_profile": "school_compliance",
+          "policy_version": "1",
+          "confirmed_fields": [],
+          "confirmation": {
+            "by": "e_demo_teacher",
+            "at": "2026-10-28T11:00:00Z",
+            "channel": "whatsapp"
+          }
+        }
+      },
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "k_demo_sample",
+        "signed_at": "2026-10-28T11:01:00Z",
+        "sig": "fWC895ujH9ug2A2flmeTfeBhKpRrcU5_-TLuk78aOuD5cSPshQVs94aKG9zSBQ2nat5X8dovD-hazZf78Q63BA"
+      }
+    },
+    {
+      "format": "tdx",
+      "spec_version": "2.0.0",
+      "capsule_id": "01a17cb2-a2de-7f87-82de-9b691d161f02",
+      "body": {
+        "tenant": "t_demo",
+        "locale": "ml-IN",
+        "record_locale": "en",
+        "country": "IN",
+        "actor": {
+          "educator_ref": "e_demo_teacher",
+          "institution_ref": "i_demo_school",
+          "institution_type": "school"
+        },
+        "session": {
+          "kind": "period",
+          "date": "2026-10-28",
+          "timezone": "Asia/Kolkata",
+          "label": "P6",
+          "cohort": "8B",
+          "subject": "Science",
+          "unit": "Force and pressure"
+        },
+        "source": {
+          "channel": "whatsapp",
+          "capture_methods": [
+            "photo",
+            "voice"
+          ],
+          "captured_at": "2026-10-28T08:31:40Z"
+        },
+        "evidence": [
+          {
+            "id": "sha256:606c64cedf885aa726a1873b284c24e24bbd072cb7be18d2e634a2e689749850",
+            "media_type": "image/jpeg",
+            "role": "board"
+          },
+          {
+            "id": "sha256:91a8e4608293f98d161589d53e59b8502b477b7c6aacc5cf41047fbc5936322f",
+            "media_type": "audio/ogg",
+            "role": "voice_note"
+          }
+        ],
+        "content": {
+          "title": "Pressure exerted by liquids",
+          "topics": [
+            "Pressure",
+            "Liquids"
+          ],
+          "assignments": []
+        },
+        "provenance": {
+          "pipeline_version": "core-0.2",
+          "steps": [
+            {
+              "step": "locate",
+              "capability": "segment",
+              "provider": "meta",
+              "model": "sam-3.1",
+              "status": "ok"
+            },
+            {
+              "step": "listen",
+              "capability": "transcribe",
+              "provider": "meta",
+              "model": "muse-voice-transcribe-1.0",
+              "status": "ok"
+            },
+            {
+              "step": "read",
+              "capability": "structure",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            },
+            {
+              "step": "check",
+              "capability": "check",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            }
+          ],
+          "fallback_used": false,
+          "overall_confidence": 0.93,
+          "field_confidence": {
+            "session.cohort": 0.97,
+            "session.subject": 0.96
+          }
+        },
+        "ext": {
+          "org.teacherdox.sample": "synthetic demo record; not produced by a live model run"
+        },
+        "entry_id": "01a17cb2-a2dd-7853-9350-53fea82c5641",
+        "lifecycle": {
+          "state": "confirmed_locked"
+        },
+        "chain": {
+          "sequence_index": 2,
+          "prev_hash": "sha256:c3b6b84381936f4accfd503cd01a23837721a6f93c299a446da0d81edb4118ad"
+        },
+        "attestation": {
+          "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+          "mode": "human",
+          "policy_profile": "school_compliance",
+          "policy_version": "1",
+          "confirmed_fields": [],
+          "confirmation": {
+            "by": "e_demo_teacher",
+            "at": "2026-10-28T11:00:00Z",
+            "channel": "whatsapp"
+          }
+        }
+      },
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "k_demo_sample",
+        "signed_at": "2026-10-28T11:02:00Z",
+        "sig": "_QOG-E4KfpJm3cGfo_HEmhcNALjR9GPfnarJyAS5K0T0CPuSqy3bkYQySn0J3bcOHuqochpXza6ATWuahOZiAA"
+      }
+    },
+    {
+      "format": "tdx",
+      "spec_version": "2.0.0",
+      "capsule_id": "01a17cb2-a2e1-778c-a594-db46011e29c2",
+      "body": {
+        "tenant": "t_demo",
+        "locale": "ml-IN",
+        "record_locale": "en",
+        "country": "IN",
+        "actor": {
+          "educator_ref": "e_demo_teacher",
+          "institution_ref": "i_demo_school",
+          "institution_type": "school"
+        },
+        "session": {
+          "kind": "period",
+          "date": "2026-10-28",
+          "timezone": "Asia/Kolkata",
+          "label": "P4",
+          "cohort": "9A",
+          "subject": "Mathematics",
+          "unit": "Linear equations"
+        },
+        "source": {
+          "channel": "whatsapp",
+          "capture_methods": [
+            "photo",
+            "voice"
+          ],
+          "captured_at": "2026-10-28T06:40:12Z"
+        },
+        "evidence": [
+          {
+            "id": "sha256:d4c55949c9661771925ede61f778804b2a605876f709a478ee0e18850603a2fd",
+            "media_type": "image/jpeg",
+            "role": "board"
+          },
+          {
+            "id": "sha256:e1a72e55382494a8b8b3933d5263f8cb5a6dc8e653e630474d46be1b9b7af8af",
+            "media_type": "audio/ogg",
+            "role": "voice_note"
+          }
+        ],
+        "content": {
+          "title": "Solving equations in one variable",
+          "topics": [
+            "Linear equations"
+          ],
+          "assignments": [
+            {
+              "text": "Ex 2.1 Q1-6",
+              "due": null
+            }
+          ]
+        },
+        "provenance": {
+          "pipeline_version": "core-0.2",
+          "steps": [
+            {
+              "step": "locate",
+              "capability": "segment",
+              "provider": "meta",
+              "model": "sam-3.1",
+              "status": "ok"
+            },
+            {
+              "step": "listen",
+              "capability": "transcribe",
+              "provider": "meta",
+              "model": "muse-voice-transcribe-1.0",
+              "status": "ok"
+            },
+            {
+              "step": "read",
+              "capability": "structure",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            },
+            {
+              "step": "check",
+              "capability": "check",
+              "provider": "meta",
+              "model": "muse-spark-1.3",
+              "status": "ok"
+            }
+          ],
+          "fallback_used": false,
+          "overall_confidence": 0.93,
+          "field_confidence": {
+            "session.cohort": 0.97,
+            "session.subject": 0.96
+          }
+        },
+        "ext": {
+          "org.teacherdox.sample": "synthetic demo record; not produced by a live model run"
+        },
+        "entry_id": "01a17cb2-a2dc-761d-ab11-3bdfe86130ec",
+        "lifecycle": {
+          "state": "confirmed_locked"
+        },
+        "chain": {
+          "sequence_index": 3,
+          "prev_hash": "sha256:aa5d22a20f622282b19c4b95ce5d133755b40b29c5b0e9ac920db8dffa998cc5"
+        },
+        "attestation": {
+          "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+          "mode": "human",
+          "confirmation": {
+            "by": "e_demo_teacher",
+            "at": "2026-10-28T11:20:00Z",
+            "channel": "whatsapp"
+          }
+        },
+        "amendment": {
+          "amends_capsule_id": "01a17cb2-a2dc-7892-8e2c-4303fd0b1290",
+          "amends_capsule_hash": "sha256:c3b6b84381936f4accfd503cd01a23837721a6f93c299a446da0d81edb4118ad",
+          "reason": "Homework was questions 1 to 6",
+          "amended_fields": [
+            "content.assignments"
+          ],
+          "amender_ref": "e_demo_teacher"
+        }
+      },
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "k_demo_sample",
+        "signed_at": "2026-10-28T11:20:00Z",
+        "sig": "AaUznLlPBEyy0cYLNP64WbEzXYi521hYWoyB4nv71oDuVVUtJEPqISA6OiVvckNM314__oXY4jXe_XsgWrLvAg"
+      }
+    }
+  ],
+  "seal": {
+    "type": "tdx-day-seal",
+    "scope": "t_demo|e_demo_teacher|2026-10-28",
+    "count": 4,
+    "merkle_root": "76359009ac126089d261cfa8334ade5738324a6439a0eeae0029423333b07bce",
+    "sealed_at": "2026-10-28T11:30:00Z",
+    "signature": {
+      "alg": "ed25519",
+      "key_id": "k_demo_sample",
+      "sig": "sEcj69L9ZmK6SKRjufXcbFtNJ2RuU2-CTJLaQcJKnZ_YDcpKwCzEP12YGMZJ0tJJfJSQP1ATcpZ_5BWb_mS7BQ"
+    }
+  },
+  "countersignatures": [
+    {
+      "type": "tdx-countersignature",
+      "target": {
+        "type": "day_seal",
+        "id": "t_demo|e_demo_teacher|2026-10-28",
+        "hash": "sha256:a52da03a5f7a6f06aba7ada673a735fd0d1467981f287e9b7e12e0617b86d4a7"
+      },
+      "approver_ref": "e_demo_headmaster",
+      "role": "headmaster",
+      "decision": "approved",
+      "note": null,
+      "signed_at": "2026-10-28T12:05:00Z",
+      "signature": {
+        "alg": "ed25519",
+        "key_id": "k_demo_sample",
+        "sig": "UGBglpZxzEc7m7LZOrKxH1z6DWL2a7ZEEx5zeX5hYK9pf054iPsfNhoOFGEuESSDQ5sU0cfQ44pS2ZOdtCl4DA"
+      }
+    }
+  ]
+}

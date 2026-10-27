@@ -1,0 +1,63 @@
+{
+  "locale": "hi",
+  "name": "Hindi",
+  "native_name": "हिन्दी",
+  "direction": "ltr",
+  "review": "draft translation, needs native-speaker review",
+  "messages": {
+    "status.auto_lock": "दर्ज हो गया। हस्ताक्षर के लिए तैयार।",
+    "status.confirm": "दर्ज हो गया। कृपया जाँच लें: {fields}।",
+    "status.hold.unusable": "इसे पढ़ा नहीं जा सका। दोबारा भेजें या लिखें कि क्या पढ़ाया।",
+    "status.hold.irrelevant": "यह किसी कक्षा के बारे में नहीं लगता। कुछ दर्ज नहीं किया गया।",
+    "status.hold.contradicted": "{field} भेजी गई सामग्री से मेल नहीं खाता। कृपया जाँच लें।",
+    "legend.guess": "⚠ = अपने आप भरा गया, कृपया जाँच लें।",
+    "auto_sign": "आप हस्ताक्षर न करें तो {time} बजे अपने आप हस्ताक्षर हो जाएगा।",
+    "action.sign": "हस्ताक्षर करें",
+    "action.view": "रिकॉर्ड देखें",
+    "action.edit": "बदलें",
+    "signed": {
+      "one": "1 रिकॉर्ड पर हस्ताक्षर हो गए।",
+      "other": "{n} रिकॉर्ड पर हस्ताक्षर हो गए।"
+    },
+    "sent_to": "भेजा गया: {approver}",
+    "digest": {
+      "one": "{date} · 1 रिकॉर्ड",
+      "other": "{date} · {n} रिकॉर्ड"
+    },
+    "late": "कक्षा के {days} दिन बाद भेजा गया। कृपया पुष्टि करें।"
+  },
+  "terms": {
+    "field.subject": "विषय",
+    "field.course": "कोर्स",
+    "field.programme": "प्रोग्राम",
+    "field.unit.chapter": "अध्याय",
+    "field.unit.module": "मॉड्यूल",
+    "field.unit.unit": "इकाई",
+    "field.cohort.class": "कक्षा",
+    "field.cohort.batch": "बैच",
+    "field.cohort.section": "सेक्शन",
+    "field.cohort.group": "समूह",
+    "field.label.period": "पीरियड",
+    "field.label.session": "सत्र",
+    "field.title": "शीर्षक",
+    "field.topics": "टॉपिक",
+    "field.summary": "सारांश",
+    "field.method": "पद्धति",
+    "field.assignments.homework": "गृहकार्य",
+    "field.assignments.assignment": "असाइनमेंट",
+    "field.next": "अगली कक्षा",
+    "field.materials": "सामग्री",
+    "kind.period": "पीरियड",
+    "kind.lecture": "लेक्चर",
+    "kind.lab": "लैब",
+    "kind.tutorial": "ट्यूटोरियल",
+    "kind.batch": "बैच",
+    "kind.workshop": "वर्कशॉप",
+    "kind.other": "सत्र",
+    "role.headmaster": "प्रधानाध्यापक",
+    "role.principal": "प्रधानाचार्य",
+    "role.hod": "विभागाध्यक्ष",
+    "role.owner": "संचालक",
+    "role.supervisor": "पर्यवेक्षक"
+  }
+}

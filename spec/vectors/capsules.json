@@ -1,0 +1,1527 @@
+{
+  "description": "Single capsules: verify against registries[registry] from keys.json. Valid cases give the exact signing input (JCS of format, spec_version, capsule_id, body) and capsule hash (sha256 of JCS of the whole envelope).",
+  "cases": [
+    {
+      "id": "draft",
+      "description": "A draft: no signature, no chain position; structurally valid.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180aa-35e8-7001-8000-000000000001",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-bc88-7065-8000-000000000065",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P1",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652",
+              "media_type": "image/jpeg",
+              "bytes": 1001,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 1",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.1 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "draft"
+          },
+          "chain": null
+        }
+      },
+      "expect": {
+        "valid": true,
+        "codes": [],
+        "signing_input": "{\"body\":{\"actor\":{\"educator_ref\":\"e_vec_001\",\"institution_ref\":\"i_vec_001\",\"institution_type\":\"school\"},\"chain\":null,\"content\":{\"assignments\":[{\"due\":null,\"text\":\"Ex 3.1 Q1-5\"}],\"title\":\"Lesson 1\",\"topics\":[\"Fractions\"]},\"country\":\"IN\",\"entry_id\":\"01a180ab-bc88-7065-8000-000000000065\",\"evidence\":[{\"bytes\":1001,\"id\":\"sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652\",\"media_type\":\"image/jpeg\",\"role\":\"board\"}],\"lifecycle\":{\"state\":\"draft\"},\"locale\":\"ml-IN\",\"provenance\":{\"fallback_used\":false,\"field_confidence\":{\"session.subject\":0.95},\"overall_confidence\":0.9,\"pipeline_version\":\"vectors\",\"steps\":[{\"capability\":\"structure\",\"cost_usd\":null,\"model\":\"muse-spark-1.3\",\"ms\":3000,\"provider\":\"meta\",\"status\":\"ok\",\"step\":\"read\"}]},\"record_locale\":\"en\",\"session\":{\"cohort\":\"8B\",\"date\":\"2026-10-28\",\"kind\":\"period\",\"label\":\"P1\",\"subject\":\"Mathematics\",\"timezone\":\"Asia/Kolkata\",\"unit\":\"Fractions\"},\"source\":{\"capture_methods\":[\"photo\"],\"captured_at\":\"2026-10-28T05:00:00Z\",\"channel\":\"whatsapp\"},\"tenant\":\"t_vectors\"},\"capsule_id\":\"01a180aa-35e8-7001-8000-000000000001\",\"format\":\"tdx\",\"spec_version\":\"2.0.0\"}",
+        "capsule_hash": "sha256:4b6aa8be6dee42b05f63807700a19957be7e612c5836f193b3d046b90b4c9991"
+      }
+    },
+    {
+      "id": "auto-locked",
+      "description": "First locked record of a day (sequence 0, prev_hash null), machine-attested.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4328-70c9-8000-0000000000c9",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-bc88-7065-8000-000000000065",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P1",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652",
+              "media_type": "image/jpeg",
+              "bytes": 1001,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 1",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.1 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 0,
+            "prev_hash": null
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "wPhlfqapqgXL-J6Wrdm9OHoYSOilly2cQqsmm1KvIUYYDqjh_Bb95TC-HfpDjfmuH0dP0KZ3tF8MqFfa80w_Dg"
+        }
+      },
+      "expect": {
+        "valid": true,
+        "codes": [],
+        "signing_input": "{\"body\":{\"actor\":{\"educator_ref\":\"e_vec_001\",\"institution_ref\":\"i_vec_001\",\"institution_type\":\"school\"},\"attestation\":{\"auto_accepted_fields\":[\"session.subject\"],\"mode\":\"machine\",\"policy_profile\":\"school_compliance\",\"policy_version\":\"1\",\"statement_ref\":\"tdx:attestation/reasonable-representation/1.0\"},\"chain\":{\"prev_hash\":null,\"sequence_index\":0},\"content\":{\"assignments\":[{\"due\":null,\"text\":\"Ex 3.1 Q1-5\"}],\"title\":\"Lesson 1\",\"topics\":[\"Fractions\"]},\"country\":\"IN\",\"entry_id\":\"01a180ab-bc88-7065-8000-000000000065\",\"evidence\":[{\"bytes\":1001,\"id\":\"sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652\",\"media_type\":\"image/jpeg\",\"role\":\"board\"}],\"lifecycle\":{\"state\":\"auto_locked\"},\"locale\":\"ml-IN\",\"provenance\":{\"fallback_used\":false,\"field_confidence\":{\"session.subject\":0.95},\"overall_confidence\":0.9,\"pipeline_version\":\"vectors\",\"steps\":[{\"capability\":\"structure\",\"cost_usd\":null,\"model\":\"muse-spark-1.3\",\"ms\":3000,\"provider\":\"meta\",\"status\":\"ok\",\"step\":\"read\"}]},\"record_locale\":\"en\",\"session\":{\"cohort\":\"8B\",\"date\":\"2026-10-28\",\"kind\":\"period\",\"label\":\"P1\",\"subject\":\"Mathematics\",\"timezone\":\"Asia/Kolkata\",\"unit\":\"Fractions\"},\"source\":{\"capture_methods\":[\"photo\"],\"captured_at\":\"2026-10-28T05:00:00Z\",\"channel\":\"whatsapp\"},\"tenant\":\"t_vectors\"},\"capsule_id\":\"01a180ad-4328-70c9-8000-0000000000c9\",\"format\":\"tdx\",\"spec_version\":\"2.0.0\"}",
+        "capsule_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+      }
+    },
+    {
+      "id": "chained",
+      "description": "Second record of the same day, linked to the first.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": true,
+        "codes": [],
+        "signing_input": "{\"body\":{\"actor\":{\"educator_ref\":\"e_vec_001\",\"institution_ref\":\"i_vec_001\",\"institution_type\":\"school\"},\"attestation\":{\"auto_accepted_fields\":[\"session.subject\"],\"mode\":\"machine\",\"policy_profile\":\"school_compliance\",\"policy_version\":\"1\",\"statement_ref\":\"tdx:attestation/reasonable-representation/1.0\"},\"chain\":{\"prev_hash\":\"sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b\",\"sequence_index\":1},\"content\":{\"assignments\":[{\"due\":null,\"text\":\"Ex 3.2 Q1-5\"}],\"title\":\"Lesson 2\",\"topics\":[\"Fractions\"]},\"country\":\"IN\",\"entry_id\":\"01a180ab-c070-7066-8000-000000000066\",\"evidence\":[{\"bytes\":1002,\"id\":\"sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062\",\"media_type\":\"image/jpeg\",\"role\":\"board\"}],\"lifecycle\":{\"state\":\"auto_locked\"},\"locale\":\"ml-IN\",\"provenance\":{\"fallback_used\":false,\"field_confidence\":{\"session.subject\":0.95},\"overall_confidence\":0.9,\"pipeline_version\":\"vectors\",\"steps\":[{\"capability\":\"structure\",\"cost_usd\":null,\"model\":\"muse-spark-1.3\",\"ms\":3000,\"provider\":\"meta\",\"status\":\"ok\",\"step\":\"read\"}]},\"record_locale\":\"en\",\"session\":{\"cohort\":\"8B\",\"date\":\"2026-10-28\",\"kind\":\"period\",\"label\":\"P2\",\"subject\":\"Mathematics\",\"timezone\":\"Asia/Kolkata\",\"unit\":\"Fractions\"},\"source\":{\"capture_methods\":[\"photo\"],\"captured_at\":\"2026-10-28T05:00:00Z\",\"channel\":\"whatsapp\"},\"tenant\":\"t_vectors\"},\"capsule_id\":\"01a180ad-4710-70ca-8000-0000000000ca\",\"format\":\"tdx\",\"spec_version\":\"2.0.0\"}",
+        "capsule_hash": "sha256:1f6570f7b80182bce2630dc3334382c3410cded3d6c88f4a4149d26479f89289"
+      }
+    },
+    {
+      "id": "amendment",
+      "description": "A correction: same entry_id as the record it amends, which it names by id and hash.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ae-c5e0-712c-8000-00000000012c",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-bc88-7065-8000-000000000065",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P1",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652",
+              "media_type": "image/jpeg",
+              "bytes": 1001,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 1",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.1 Q1-6",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "confirmed_locked"
+          },
+          "chain": {
+            "sequence_index": 3,
+            "prev_hash": "sha256:b450843913ece565220f0f8ae8863b31f2eebd491a851761bbd4c807e7a9117e"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "human"
+          },
+          "amendment": {
+            "amends_capsule_id": "01a180ad-4328-70c9-8000-0000000000c9",
+            "amends_capsule_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b",
+            "reason": "Homework was Q1-6",
+            "amended_fields": [
+              "content.assignments"
+            ],
+            "amender_ref": "e_vec_001"
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T13:00:00Z",
+          "sig": "jsJeix2JX8JIjui0TpI8dMBvSthGryCVCXE0jbLV8iYOfy-sEXwdkgyrpFn8VV0do5z8OJl4liVIqLOHQjGZDQ"
+        }
+      },
+      "expect": {
+        "valid": true,
+        "codes": [],
+        "signing_input": "{\"body\":{\"actor\":{\"educator_ref\":\"e_vec_001\",\"institution_ref\":\"i_vec_001\",\"institution_type\":\"school\"},\"amendment\":{\"amended_fields\":[\"content.assignments\"],\"amender_ref\":\"e_vec_001\",\"amends_capsule_hash\":\"sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b\",\"amends_capsule_id\":\"01a180ad-4328-70c9-8000-0000000000c9\",\"reason\":\"Homework was Q1-6\"},\"attestation\":{\"mode\":\"human\",\"statement_ref\":\"tdx:attestation/reasonable-representation/1.0\"},\"chain\":{\"prev_hash\":\"sha256:b450843913ece565220f0f8ae8863b31f2eebd491a851761bbd4c807e7a9117e\",\"sequence_index\":3},\"content\":{\"assignments\":[{\"due\":null,\"text\":\"Ex 3.1 Q1-6\"}],\"title\":\"Lesson 1\",\"topics\":[\"Fractions\"]},\"country\":\"IN\",\"entry_id\":\"01a180ab-bc88-7065-8000-000000000065\",\"evidence\":[{\"bytes\":1001,\"id\":\"sha256:daebe7f2eb6462bb719ec29b36f9ba335291b5832e0de558e69ec3b7436a2652\",\"media_type\":\"image/jpeg\",\"role\":\"board\"}],\"lifecycle\":{\"state\":\"confirmed_locked\"},\"locale\":\"ml-IN\",\"provenance\":{\"fallback_used\":false,\"field_confidence\":{\"session.subject\":0.95},\"overall_confidence\":0.9,\"pipeline_version\":\"vectors\",\"steps\":[{\"capability\":\"structure\",\"cost_usd\":null,\"model\":\"muse-spark-1.3\",\"ms\":3000,\"provider\":\"meta\",\"status\":\"ok\",\"step\":\"read\"}]},\"record_locale\":\"en\",\"session\":{\"cohort\":\"8B\",\"date\":\"2026-10-28\",\"kind\":\"period\",\"label\":\"P1\",\"subject\":\"Mathematics\",\"timezone\":\"Asia/Kolkata\",\"unit\":\"Fractions\"},\"source\":{\"capture_methods\":[\"photo\"],\"captured_at\":\"2026-10-28T05:00:00Z\",\"channel\":\"whatsapp\"},\"tenant\":\"t_vectors\"},\"capsule_id\":\"01a180ae-c5e0-712c-8000-00000000012c\",\"format\":\"tdx\",\"spec_version\":\"2.0.0\"}",
+        "capsule_hash": "sha256:a5d8cf3ea3a5f60c07713802ba3d2c92d730be916ff86d909761d2ba2e0fb10c"
+      }
+    },
+    {
+      "id": "university-lecture",
+      "description": "A university lecture in Portuguese (America/Sao_Paulo), human-confirmed.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-6268-70d1-8000-0000000000d1",
+        "body": {
+          "tenant": "t_vectors_br",
+          "entry_id": "01a180ab-dbc8-706d-8000-00000000006d",
+          "actor": {
+            "educator_ref": "e_vec_br",
+            "institution_ref": "i_vec_br",
+            "institution_type": "university"
+          },
+          "locale": "pt-BR",
+          "record_locale": "pt-BR",
+          "country": "BR",
+          "session": {
+            "kind": "lecture",
+            "date": "2026-10-28",
+            "timezone": "America/Sao_Paulo",
+            "label": "CS201-L14",
+            "subject": "Ciência da Computação",
+            "course": "CS201 Estruturas de Dados",
+            "unit": "Tabelas hash"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:5570153a304cd425c7473c4e59ea530fa3436eb8e43d3b4c9ad334e087ff2955",
+              "media_type": "image/jpeg",
+              "bytes": 1009,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 9",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.9 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "confirmed_locked"
+          },
+          "chain": {
+            "sequence_index": 0,
+            "prev_hash": null
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "human",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "KVe00oaV0kC5wOEUJuXic57aWaDSssQebT3ufATjFZRAPlpInolIaL6nzzXtGpUEKS1Jadb5F3gvSARZeK4HBg"
+        }
+      },
+      "expect": {
+        "valid": true,
+        "codes": [],
+        "signing_input": "{\"body\":{\"actor\":{\"educator_ref\":\"e_vec_br\",\"institution_ref\":\"i_vec_br\",\"institution_type\":\"university\"},\"attestation\":{\"auto_accepted_fields\":[\"session.subject\"],\"mode\":\"human\",\"policy_profile\":\"school_compliance\",\"policy_version\":\"1\",\"statement_ref\":\"tdx:attestation/reasonable-representation/1.0\"},\"chain\":{\"prev_hash\":null,\"sequence_index\":0},\"content\":{\"assignments\":[{\"due\":null,\"text\":\"Ex 3.9 Q1-5\"}],\"title\":\"Lesson 9\",\"topics\":[\"Fractions\"]},\"country\":\"BR\",\"entry_id\":\"01a180ab-dbc8-706d-8000-00000000006d\",\"evidence\":[{\"bytes\":1009,\"id\":\"sha256:5570153a304cd425c7473c4e59ea530fa3436eb8e43d3b4c9ad334e087ff2955\",\"media_type\":\"image/jpeg\",\"role\":\"board\"}],\"lifecycle\":{\"state\":\"confirmed_locked\"},\"locale\":\"pt-BR\",\"provenance\":{\"fallback_used\":false,\"field_confidence\":{\"session.subject\":0.95},\"overall_confidence\":0.9,\"pipeline_version\":\"vectors\",\"steps\":[{\"capability\":\"structure\",\"cost_usd\":null,\"model\":\"muse-spark-1.3\",\"ms\":3000,\"provider\":\"meta\",\"status\":\"ok\",\"step\":\"read\"}]},\"record_locale\":\"pt-BR\",\"session\":{\"course\":\"CS201 Estruturas de Dados\",\"date\":\"2026-10-28\",\"kind\":\"lecture\",\"label\":\"CS201-L14\",\"subject\":\"Ciência da Computação\",\"timezone\":\"America/Sao_Paulo\",\"unit\":\"Tabelas hash\"},\"source\":{\"capture_methods\":[\"photo\"],\"captured_at\":\"2026-10-28T05:00:00Z\",\"channel\":\"whatsapp\"},\"tenant\":\"t_vectors_br\"},\"capsule_id\":\"01a180ad-6268-70d1-8000-0000000000d1\",\"format\":\"tdx\",\"spec_version\":\"2.0.0\"}",
+        "capsule_hash": "sha256:5130b411afa6fb7b323767d44308e280d0ef0894f430c2e2d37e72074e463c31"
+      }
+    },
+    {
+      "id": "content-tampered",
+      "description": "Homework text changed after signing.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "No homework",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "signature_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "signature-tampered",
+      "description": "Last signature byte changed.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8AA"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "signature_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "unknown-key",
+      "description": "Signed with a key the registry does not list.",
+      "registry": "empty",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "unknown_key"
+        ]
+      }
+    },
+    {
+      "id": "key-revoked",
+      "description": "Signing key revoked before signed_at.",
+      "registry": "revoked",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "key_revoked"
+        ]
+      }
+    },
+    {
+      "id": "key-expired",
+      "description": "Signing key expired before signed_at.",
+      "registry": "expired",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "key_expired"
+        ]
+      }
+    },
+    {
+      "id": "key-not-yet-valid",
+      "description": "Signing key only valid after signed_at.",
+      "registry": "future",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "key_not_yet_valid"
+        ]
+      }
+    },
+    {
+      "id": "locked-without-signature",
+      "description": "Lifecycle says locked but there is no signature.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "missing_signature",
+          "schema_invalid"
+        ]
+      }
+    },
+    {
+      "id": "schema-timezone",
+      "description": "Time zone is an offset, not an IANA name.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180aa-41a0-7004-8000-000000000004",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c840-7068-8000-000000000068",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "+05:30",
+            "label": "P4",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:d319a5615f6248c0130d22c7e51b6448085dd7ab2d3c8cda17af9793101b0ae3",
+              "media_type": "image/jpeg",
+              "bytes": 1004,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 4",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.4 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "draft"
+          },
+          "chain": null
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "schema_invalid"
+        ]
+      }
+    },
+    {
+      "id": "schema-date",
+      "description": "Session date does not exist.",
+      "registry": "default",
+      "capsule": {
+        "format": "tdx",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180aa-4588-7005-8000-000000000005",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-cc28-7069-8000-000000000069",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-02-30",
+            "timezone": "Asia/Kolkata",
+            "label": "P5",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:7923a31eae068bdc502cca18f8c8cedfd3d76bc10e9b3a158f78342dc8bd454d",
+              "media_type": "image/jpeg",
+              "bytes": 1005,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 5",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.5 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "draft"
+          },
+          "chain": null
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "schema_invalid"
+        ]
+      }
+    },
+    {
+      "id": "wrong-format",
+      "description": "format is not \"tdx\".",
+      "registry": "default",
+      "capsule": {
+        "format": "tdz",
+        "spec_version": "2.0.0",
+        "capsule_id": "01a180ad-4710-70ca-8000-0000000000ca",
+        "body": {
+          "tenant": "t_vectors",
+          "entry_id": "01a180ab-c070-7066-8000-000000000066",
+          "actor": {
+            "educator_ref": "e_vec_001",
+            "institution_ref": "i_vec_001",
+            "institution_type": "school"
+          },
+          "locale": "ml-IN",
+          "record_locale": "en",
+          "country": "IN",
+          "session": {
+            "kind": "period",
+            "date": "2026-10-28",
+            "timezone": "Asia/Kolkata",
+            "label": "P2",
+            "cohort": "8B",
+            "subject": "Mathematics",
+            "unit": "Fractions"
+          },
+          "source": {
+            "channel": "whatsapp",
+            "capture_methods": [
+              "photo"
+            ],
+            "captured_at": "2026-10-28T05:00:00Z"
+          },
+          "evidence": [
+            {
+              "id": "sha256:74cd5a8abf4dc648a84c55f452ead14bec7ed1b1a27009705e50e34cd6795062",
+              "media_type": "image/jpeg",
+              "bytes": 1002,
+              "role": "board"
+            }
+          ],
+          "content": {
+            "title": "Lesson 2",
+            "topics": [
+              "Fractions"
+            ],
+            "assignments": [
+              {
+                "text": "Ex 3.2 Q1-5",
+                "due": null
+              }
+            ]
+          },
+          "provenance": {
+            "pipeline_version": "vectors",
+            "steps": [
+              {
+                "step": "read",
+                "capability": "structure",
+                "provider": "meta",
+                "model": "muse-spark-1.3",
+                "status": "ok",
+                "ms": 3000,
+                "cost_usd": null
+              }
+            ],
+            "fallback_used": false,
+            "overall_confidence": 0.9,
+            "field_confidence": {
+              "session.subject": 0.95
+            }
+          },
+          "lifecycle": {
+            "state": "auto_locked"
+          },
+          "chain": {
+            "sequence_index": 1,
+            "prev_hash": "sha256:6b303b84df3734510ed3f07c1d3ffd0b4817422c67419cd26713078ee82c0c0b"
+          },
+          "attestation": {
+            "statement_ref": "tdx:attestation/reasonable-representation/1.0",
+            "mode": "machine",
+            "policy_profile": "school_compliance",
+            "policy_version": "1",
+            "auto_accepted_fields": [
+              "session.subject"
+            ]
+          }
+        },
+        "signature": {
+          "alg": "ed25519",
+          "key_id": "tdx-test-2026",
+          "signed_at": "2026-10-28T12:00:00Z",
+          "sig": "9Fq9mNfsfvcNw96kofY1UEhV55XbvzkITPyI6Hjdjq-B62fDr-_34VpgHhX9yLRz5zFOIS4WBWeiGCvcqMe8Cg"
+        }
+      },
+      "expect": {
+        "valid": false,
+        "codes": [
+          "format_invalid",
+          "schema_invalid",
+          "signature_mismatch"
+        ]
+      }
+    }
+  ]
+}

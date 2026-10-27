@@ -1,0 +1,61 @@
+{
+  "locale": "id",
+  "name": "Indonesian",
+  "native_name": "Bahasa Indonesia",
+  "direction": "ltr",
+  "review": "draft translation, needs native-speaker review",
+  "messages": {
+    "status.auto_lock": "Tercatat. Siap ditandatangani.",
+    "status.confirm": "Tercatat. Mohon periksa: {fields}.",
+    "status.hold.unusable": "Ini tidak dapat dibaca. Kirim ulang, atau ketik apa yang Anda ajarkan.",
+    "status.hold.irrelevant": "Ini tidak tampak seperti kegiatan mengajar. Tidak ada yang dicatat.",
+    "status.hold.contradicted": "{field} tidak sesuai dengan yang dikirim. Mohon periksa.",
+    "legend.guess": "⚠ = diisi otomatis, mohon periksa.",
+    "auto_sign": "Jika tidak Anda tanda tangani, catatan ditandatangani otomatis pukul {time}.",
+    "action.sign": "Tanda tangani",
+    "action.view": "Lihat catatan",
+    "action.edit": "Ubah",
+    "signed": {
+      "other": "{n} catatan ditandatangani."
+    },
+    "sent_to": "Dikirim ke: {approver}",
+    "digest": {
+      "other": "{date} · {n} catatan"
+    },
+    "late": "Dikirim {days} hari setelah kelas. Mohon konfirmasi."
+  },
+  "terms": {
+    "field.subject": "mata pelajaran",
+    "field.course": "mata kuliah",
+    "field.programme": "program",
+    "field.unit.chapter": "bab",
+    "field.unit.module": "modul",
+    "field.unit.unit": "unit",
+    "field.cohort.class": "kelas",
+    "field.cohort.batch": "kelompok",
+    "field.cohort.section": "kelas",
+    "field.cohort.group": "kelompok",
+    "field.label.period": "jam pelajaran",
+    "field.label.session": "sesi",
+    "field.title": "judul",
+    "field.topics": "topik",
+    "field.summary": "ringkasan",
+    "field.method": "metode",
+    "field.assignments.homework": "PR",
+    "field.assignments.assignment": "tugas",
+    "field.next": "pertemuan berikutnya",
+    "field.materials": "bahan ajar",
+    "kind.period": "jam pelajaran",
+    "kind.lecture": "kuliah",
+    "kind.lab": "praktikum",
+    "kind.tutorial": "tutorial",
+    "kind.batch": "kelompok belajar",
+    "kind.workshop": "lokakarya",
+    "kind.other": "sesi",
+    "role.headmaster": "kepala sekolah",
+    "role.principal": "kepala sekolah",
+    "role.hod": "ketua program studi",
+    "role.owner": "pemilik",
+    "role.supervisor": "penyelia"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "country": "FR",
+  "name": "France",
+  "timezones": [
+    "Europe/Paris"
+  ],
+  "default_timezone": "Europe/Paris",
+  "locales": [
+    "fr"
+  ],
+  "default_record_locale": "fr",
+  "approver_hierarchy": [
+    "directeur d'école or chef d'établissement",
+    "inspection (IEN / IA-IPR)",
+    "rectorat"
+  ],
+  "academic_year_start_month": 9,
+  "academic_year_note": "metropolitan France; overseas territories use other time zones and calendars",
+  "curriculum_frameworks": [
+    "Programmes de l'Éducation nationale"
+  ],
+  "data_residency": "EU"
+}

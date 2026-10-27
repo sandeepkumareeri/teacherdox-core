@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>.tdx Record Verifier</title>
+<meta name="description" content="Check that a .tdx teaching record is authentic and unaltered. Runs in your browser; nothing is uploaded.">
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --ink: #1d1f1c; --muted: #5f645c; --line: #dcdcd4;
+    --accent: #1f5f4a; --accent-ink: #ffffff; --ok: #1e6b3c; --ok-bg: #e5f2e8; --bad: #a3271f; --bad-bg: #f8e4e1;
+    --warn: #8a5a00; --warn-bg: #fbf0d9; --code: #f0efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141614; --surface: #1d201d; --ink: #e9ebe6; --muted: #a2a89e; --line: #343832;
+      --accent: #7cc4a6; --accent-ink: #0d1a14; --ok: #8fd6a6; --ok-bg: #18301f; --bad: #f2a097; --bad-bg: #3a1c19;
+      --warn: #f0c56b; --warn-bg: #352a12; --code: #262a25;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141614; --surface: #1d201d; --ink: #e9ebe6; --muted: #a2a89e; --line: #343832;
+    --accent: #7cc4a6; --accent-ink: #0d1a14; --ok: #8fd6a6; --ok-bg: #18301f; --bad: #f2a097; --bad-bg: #3a1c19;
+    --warn: #f0c56b; --warn-bg: #352a12; --code: #262a25;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 32px 0 12px; }
+  p.lead { color: var(--muted); margin: 0 0 24px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 6px; }
+  textarea { width: 100%; min-height: 160px; resize: vertical; padding: 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--code); color: var(--ink); font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  button, .file { appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px;
+    padding: 9px 14px; font: inherit; font-size: 15px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button:focus-visible, .file:focus-within, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .file input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; font-size: 14px; color: var(--muted); }
+  .verdict { margin-top: 24px; border-radius: 12px; padding: 16px; font-weight: 600; font-size: 18px; }
+  .verdict.ok { background: var(--ok-bg); color: var(--ok); }
+  .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  .verdict small { display: block; font-weight: 400; font-size: 14px; margin-top: 4px; color: var(--ink); }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 12px; font-size: 14px; margin-top: 12px; }
+  .records { display: grid; gap: 12px; }
+  .rec h3 { margin: 0 0 4px; font-size: 16px; }
+  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 8px; margin-right: 6px; border: 1px solid var(--line); }
+  .chip.ok { color: var(--ok); background: var(--ok-bg); border-color: transparent; }
+  .chip.bad { color: var(--bad); background: var(--bad-bg); border-color: transparent; }
+  .steps { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+  .steps li { font-size: 12px; background: var(--code); border-radius: 6px; padding: 3px 8px; }
+  .errors { color: var(--bad); font-size: 14px; margin: 8px 0 0; padding-left: 18px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  footer code { white-space: nowrap; word-break: normal; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Verify a teaching record</h1>
+  <p class="lead">Check that a <b>.tdx</b> record — one class session, or a whole signed day — is authentic and has not been changed since it was signed. The check runs in your browser with the published public keys; nothing you paste is uploaded.</p>
+
+  <section class="card" aria-labelledby="in-label">
+    <label id="in-label" for="input">Record, day export or bundle (JSON)</label>
+    <textarea id="input" spellcheck="false" placeholder='Paste a capsule, a list of capsules, or a day export: { "capsules": [...], "seal": {...}, "countersignatures": [...] }'></textarea>
+    <div class="row">
+      <button class="primary" id="verify">Verify</button>
+      <label class="file">Open file…<input type="file" id="file" accept=".json,.tdx,application/json"></label>
+      <button id="sample">Load a sample day</button>
+      <button id="tamper" hidden>Change one homework line</button>
+    </div>
+    <details>
+      <summary>Public keys: <span id="keysource">loading…</span></summary>
+      <p class="muted">Signatures are checked against this key registry. To check records from another issuer, paste its published registry.</p>
+      <textarea id="keys" spellcheck="false" style="min-height:100px"></textarea>
+    </details>
+  </section>
+
+  <div id="out" aria-live="polite"></div>
+
+  <footer>
+    The <b>.tdx</b> format, schema and verifier are open (Apache-2.0) — the same checks run from the command line with
+    <code>tdx verify file.json --keys keys.json</code>. Part of TeacherDox Core.
+  </footer>
+</main>
+<script src="./tdx-verify.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var defaultKeys = null, sampleKeys = null;
+
+  function setKeys(reg, source) { $('keys').value = JSON.stringify(reg, null, 2); $('keysource').textContent = source; }
+
+  fetch('./keys.json').then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (reg) { defaultKeys = reg; setKeys(reg, 'this server (' + (reg.keys || []).length + ' key' + ((reg.keys || []).length === 1 ? '' : 's') + ')'); })
+    .catch(function () { $('keysource').textContent = 'none found — paste a registry'; });
+
+  if (!window.tdxVerify || !(window.crypto && window.crypto.subtle)) {
+    $('out').innerHTML = '<div class="verdict bad">This browser cannot verify signatures.<small>It needs WebCrypto with Ed25519 (current Chrome, Edge, Firefox or Safari). Use the command-line verifier instead.</small></div>';
+  }
+
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    f.text().then(function (t) { $('input').value = t; run(); });
+  });
+
+  $('sample').addEventListener('click', function () {
+    Promise.all([fetch('./samples/day-demo.json').then(function (r) { return r.json(); }), fetch('./samples/keys-demo.json').then(function (r) { return r.json(); })])
+      .then(function (x) { $('input').value = JSON.stringify(x[0], null, 2); sampleKeys = x[1]; setKeys(x[1], 'sample issuer (demo key)'); $('tamper').hidden = false; run(); })
+      .catch(function () { $('out').innerHTML = '<div class="warn">The sample is not available here.</div>'; });
+  });
+
+  $('tamper').addEventListener('click', function () {
+    try {
+      var data = JSON.parse($('input').value);
+      var c = (data.capsules || []).find(function (x) { return x.body && x.body.content && (x.body.content.assignments || []).length; });
+      if (!c) return;
+      c.body.content.assignments[0].text = 'No homework';
+      $('input').value = JSON.stringify(data, null, 2);
+      run();
+    } catch (e) { /* not the sample */ }
+  });
+
+  $('verify').addEventListener('click', run);
+
+  function run() {
+    var input, reg;
+    try { input = JSON.parse($('input').value); } catch (e) { $('out').innerHTML = '<div class="verdict bad">That is not valid JSON.<small>' + esc(e.message) + '</small></div>'; return; }
+    try { reg = $('keys').value.trim() ? JSON.parse($('keys').value) : null; } catch (e) { $('out').innerHTML = '<div class="verdict bad">The key registry is not valid JSON.</div>'; return; }
+    $('out').innerHTML = '<p class="muted">Checking…</p>';
+    window.tdxVerify.verify(input, reg).then(render, function (e) { $('out').innerHTML = '<div class="verdict bad">Could not verify.<small>' + esc(e.message) + '</small></div>'; });
+  }
+
+  function line(s) { return [s.label, s.cohort, s.subject || s.course, s.unit].filter(Boolean).map(esc).join(' · '); }
+  var STATE = { auto_locked: 'signed (automatic)', confirmed_locked: 'signed (confirmed)', draft: 'draft — not signed', held: 'held — not signed' };
+
+  function render(r) {
+    var locked = r.capsules.filter(function (c) { return c.state === 'auto_locked' || c.state === 'confirmed_locked'; });
+    var h = '';
+    var invalid = r.capsules.filter(function (c) { return !c.ok; });
+    var why = invalid.length
+      ? (invalid.some(function (c) { return /signature does not match/.test(c.errors.join()); })
+          ? 'Changed after signing: ' + invalid.map(function (c) { return line(c.summary) || c.capsule_id; }).join('; ') + '.'
+          : esc(invalid[0].errors[0]))
+      : esc(r.errors[0] || '');
+    h += r.ok
+      ? '<div class="verdict ok">✓ Authentic and unaltered<small>' + locked.length + ' signed record' + (locked.length === 1 ? '' : 's') + ', ' + r.days.length + ' day' + (r.days.length === 1 ? '' : 's') + (r.countersignatures.length ? ', ' + r.countersignatures.length + ' countersignature' + (r.countersignatures.length === 1 ? '' : 's') : '') + ' checked.</small></div>'
+      : '<div class="verdict bad">✗ Verification failed<small>' + why + '</small></div>';
+    if (r.registry_source !== 'given') h += '<div class="warn">Keys: ' + esc(r.registry_source) + '. Use the issuer\'s published registry for a trustworthy result.</div>';
+
+    if (r.days.length) {
+      h += '<h2>Days</h2><div class="records">';
+      r.days.forEach(function (d) {
+        var p = d.scope.split('|');
+        h += '<div class="card rec"><h3>' + esc(p[2]) + ' · educator <span class="mono">' + esc(p[1]) + '</span></h3>'
+          + '<span class="chip ' + (d.ok ? 'ok' : 'bad') + '">chain ' + (d.ok ? 'intact' : 'broken') + '</span>'
+          + '<span class="chip">' + d.count + ' signed</span>'
+          + (d.seal ? '<span class="chip ' + (d.seal.ok ? 'ok' : 'bad') + '">day seal ' + (d.seal.ok ? 'valid' : 'invalid') + '</span>' : '<span class="chip">not sealed</span>')
+          + (invalid.length && !d.ok ? '<p class="muted" style="margin:8px 0 0">Invalid records are left out of the chain, so the records around them no longer link up:</p>' : '')
+          + errs(d.errors.concat(d.seal ? d.seal.errors : [])) + '</div>';
+      });
+      h += '</div>';
+    }
+
+    if (r.countersignatures.length) {
+      h += '<h2>Countersignatures</h2><div class="records">';
+      r.countersignatures.forEach(function (c) {
+        h += '<div class="card rec"><h3>' + esc(c.role) + ' <span class="mono">' + esc(c.approver_ref) + '</span></h3>'
+          + '<span class="chip ' + (c.ok ? 'ok' : 'bad') + '">' + esc(c.decision) + (c.ok ? ' · valid' : ' · invalid') + '</span>'
+          + '<span class="chip">' + (c.target.type === 'day_seal' ? 'whole day' : 'one record') + '</span>'
+          + '<span class="muted">' + esc((c.signed_at || '').replace('T', ' ').slice(0, 16)) + ' UTC</span>' + errs(c.errors) + '</div>';
+      });
+      h += '</div>';
+    }
+
+    if (r.capsules.length) {
+      h += '<h2>Records</h2><div class="records">';
+      r.capsules.forEach(function (c) {
+        var s = c.summary;
+        h += '<div class="card rec"><h3>' + (line(s) || 'Record') + '</h3>'
+          + (s.title ? '<div>' + esc(s.title) + '</div>' : '')
+          + (s.assignments.length ? '<div class="muted">Homework: ' + s.assignments.map(esc).join('; ') + '</div>' : '')
+          + '<div class="row" style="margin-top:8px"><span class="chip ' + (c.ok ? 'ok' : 'bad') + '">' + (c.ok ? 'valid' : 'invalid') + '</span>'
+          + '<span class="chip">' + esc(STATE[c.state] || c.state) + '</span>'
+          + (s.amends ? '<span class="chip">correction</span>' : '')
+          + (s.sample ? '<span class="chip" title="Synthetic demo record; not produced by a live model run">sample</span>' : '')
+          + (c.state !== 'draft' && c.state !== 'held' && !c.effective && c.ok ? '<span class="chip">superseded by a correction</span>' : '') + '</div>'
+          + (s.steps.length ? '<ul class="steps" aria-label="How this record was made">' + s.steps.map(function (x) {
+              return '<li>' + esc(x.step) + ': ' + esc(x.model || x.provider) + (x.status && x.status !== 'ok' ? ' (' + esc(x.status) + ')' : '') + '</li>';
+            }).join('') + '</ul>' : '')
+          + errs(c.errors)
+          + '<details><summary>Hash</summary><p class="mono">' + esc(c.hash) + '</p></details></div>';
+      });
+      h += '</div>';
+    }
+    $('out').innerHTML = h;
+  }
+
+  function errs(list) { return list && list.length ? '<ul class="errors">' + list.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>' : ''; }
+})();
+</script>
+</body>
+</html>

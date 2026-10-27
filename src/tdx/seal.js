@@ -53,7 +53,15 @@ function verifySeal(seal, registry, hashes) {
   const key = (registry?.keys || []).find(k => k.kid === signature?.key_id);
   const errors = [];
   if (!key) errors.push('unknown seal key');
-  else if (!verifyBytes(key, canonicalize(body), signature.sig)) errors.push('seal signature invalid');
+  else {
+    const at = Date.parse(body.sealed_at);
+    if (Number.isFinite(at)) {
+      if (key.valid_from && at < Date.parse(key.valid_from)) errors.push(`key ${key.kid} not yet valid at signed_at`);
+      if (key.valid_to && at > Date.parse(key.valid_to)) errors.push(`key ${key.kid} expired before signed_at`);
+      if (key.revoked_at && at >= Date.parse(key.revoked_at)) errors.push(`key ${key.kid} was revoked before signed_at`);
+    }
+    if (!verifyBytes(key, canonicalize(body), signature.sig)) errors.push('seal signature invalid');
+  }
   if (hashes && merkleRoot(hashes) !== seal.merkle_root) errors.push('merkle root does not match the records');
   return { ok: errors.length === 0, errors };
 }

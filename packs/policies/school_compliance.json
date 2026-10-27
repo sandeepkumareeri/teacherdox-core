@@ -1,0 +1,21 @@
+{
+  "profile": "school_compliance",
+  "version": "1",
+  "description": "A school's teaching diary: verified by the check step, countersigned by the headmaster.",
+  "min": {
+    "critical": 0.9,
+    "material": 0.75,
+    "soft": 0
+  },
+  "hold_below": {
+    "critical": 0.4
+  },
+  "steps": {
+    "locate": true,
+    "check": true
+  },
+  "require_check": true,
+  "max_capture_lag_days": 1,
+  "allow_auto_lock": true,
+  "require_approval": true
+}

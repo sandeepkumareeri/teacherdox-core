@@ -46,3 +46,70 @@ Verified with real calls by the `Meta probe` workflow in the private TeacherDox 
 ## Account notes
 - The account runs on hackathon free credits; Meta's billing page says content sent while using free
   credits may be used for product improvement → only demo/test data or consenting educators.
+
+## Record Engine, first live run (27 Oct 2026, 10:39 UTC)
+
+`Photo pipeline live` run [40489280886](https://github.com/sandeepkumareeri/teacherdox-core/actions/runs/40489280886)
+(attempt 2), synthetic board `test/fixtures/board-synthetic.jpg`, Meta only, no fallback. The request and
+response shapes in this file worked unchanged in the engine (`/responses` for SAM, `/chat/completions` with a
+strict JSON schema and `reasoning_effort: "low"` for Muse Spark, instructions in the user turn).
+
+| Step | Model | ms | Tokens in / out | Result |
+|---|---|---|---|---|
+| locate | sam-3.1 | 3181 | — | box [0.1117, 0.1292, 0.8883, 0.7875] (drawn board ≈ [0.109, 0.125, 0.891, 0.792]); crop 43,718 bytes |
+| read | muse-spark-1.3 | 4241 | 1274 / 1267 | cohort 8B · subject Mathematics · unit Fractions · "Adding fractions with unlike denominators" · HW "Ex 3.2 Q1-5" |
+| check | muse-spark-1.3 | 4954 | 1233 / 1171 | `session.subject` **unsupported**: "Board shows fractions but no subject word." |
+
+Total 12.4 s. Subject and unit came back separated (the probe's "Fractions as subject" problem is fixed by the
+prompt). The check step capped `session.subject` at 0.5 because the board never names the subject — it was
+inferred — so the record was routed to **confirm** ("Recorded. Please check: subject.") instead of being
+auto-locked. That is the intended behaviour: an inferred critical field goes to the educator. In the product the
+subject usually comes from the educator's timetable (`context.session.subject` / `usual`), which the engine then
+treats as known. Completion tokens include reasoning; cost stays `null` until Muse Spark's price is published.
+
+## Muse Spark Open on Baseten (27 Oct 2026)
+
+Meta's open-weight model, served by Baseten. Read from Baseten's docs (Model APIs overview, reasoning, vision,
+audio, structured outputs, pricing, LLM OpenAPI spec — fetched by the `Baseten docs` workflow, because the
+development sandbox cannot reach baseten.co) and observed live by the `Baseten probe` workflow (synthetic data).
+
+**From the docs**
+- `POST https://inference.baseten.co/v1/chat/completions`, `Authorization: Bearer <BASETEN_API_KEY>`, OpenAI-compatible.
+  Hackathon model id **`meta-models/muse-spark-open-1026`** (the docs list `meta-models/muse-spark-open`).
+- Always reasons. `reasoning_effort`: `low | medium | high | xhigh` (default `xhigh`; `none`/`minimal` run at `low`).
+  `max_tokens` defaults to 4096 and reasoning counts against it.
+- Images: `{type:"image_url", image_url:{url}}` (HTTPS or `data:`), JPEG/PNG/WebP/GIF/BMP/TIFF, ≤ 8 per request, ≤ 10 MB each.
+- Audio: **`{type:"audio_url", audio_url:{url}}`** (HTTPS or `data:`); WAV, MP3, FLAC, OGG (Vorbis/Opus), M4A/AAC;
+  8–48 kHz; ≤ 4 files, 25 MB and 5 minutes each. Audio is billed as input tokens.
+- Structured outputs: Muse Spark Open "accepts `json_schema` but doesn't enforce the schema"; no JSON mode.
+  `n > 1` → HTTP 400; `logprobs` ignored; `seed` / `temperature: 0` not reproducible.
+- Price (baseten.co/pricing): **$1.25 input, $0.15 cached input, $4.25 output per 1M tokens**.
+
+**Observed**
+- Response: `choices[0].message.{content, role, reasoning_content}`; usage has
+  `completion_tokens_details.reasoning_tokens` and `prompt_tokens_details.cached_tokens`. System role works.
+- Text: "Reply with exactly: TeacherDox OK" → `TeacherDox OK`, 0.8–1.7 s. `reasoning_effort: "low"`: 17 × 23 → `391`, 0.7–0.9 s.
+- Board image + schema → cohort 8B · Mathematics · Fractions · HW "Ex 3.2 Q1-5" in 6.4–6.9 s (~1,700 prompt tokens),
+  but the JSON was loose: values wrapped in `**…**`, confidence `99` instead of 0–1, once fenced. Hence: schema
+  stated in the prompt, every reply parsed and validated, a mismatch is an error (→ fallback).
+- Text-only extraction with a schema once returned `assignments: []` and `confidence: 0` although the homework was in the text.
+- Audio (first probe, plain prompt asking for `TRANSCRIPT / ENGLISH / LANGUAGE` lines): synthetic **English** WAV was
+  understood (English rendering correct, though the "transcript" came back labelled German, or in Cyrillic, 9–13 s);
+  `input_audio` with OGG → HTTP 400 (`audio_url` is the documented part). Synthetic **Malayalam** WAV: "I don't see an
+  audio file attached" — not heard.
+- Audio with `response_format: json_schema` (second probe): **every** voice note — en/hi/te/ml, OGG and WAV — came back
+  "no speech". So the engine asks for labelled lines without a schema for transcription.
+- Audio through the engine's own path (third probe, labelled-line prompt, `audio_url` data URL), 8 synthetic notes:
+  en.ogg, hi.ogg, hi.wav, ml.wav, te.ogg, te.wav → "no audio was provided"; en.wav → a labelled reply that only said
+  "No audio detected"; ml.ogg → a phonetic garble ("Mekam Klase Bi Kanidem … mathyasem mun rant") tagged `kn`.
+  **Conclusion: Muse Spark Open audio on Baseten is not reliable on these synthetic notes; transcription through it is
+  off by default and Malayalam is not routed to it.** Real recordings may differ — the eval measures it.
+- Photo pipeline, live (run 40499501908): SAM 3.1 unavailable (see below), so the whole photo was read — read 5.8 s,
+  2,425 in / 602 out tokens, $0.00559; check 6.9 s, 2,127 / 751, $0.00585; 8B · Mathematics · Fractions ·
+  "Adding Fractions by Making Denominators Same" · HW "Ex 3.2 Q1-5"; all fields ≥ 0.9 → auto-locked, signed, verified.
+
+## Meta Model API key, 27 Oct 11:49 UTC onward
+
+From 11:49 UTC the Meta Model API answered `HTTP 404 model_not_found` for `muse-spark-1.3` and `sam-3.1`, which worked
+at 10:39 UTC, and `GET /v1/models` with the repository's `META_API_KEY` returns an empty list: the key in the secret
+has no model access (replaced key, or credits/permissions changed). Nothing in the engine changed between the runs.

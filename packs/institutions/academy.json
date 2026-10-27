@@ -1,0 +1,22 @@
+{
+  "type": "academy",
+  "session_kinds": [
+    "batch",
+    "tutorial",
+    "other"
+  ],
+  "default_kind": "batch",
+  "field_terms": {
+    "session.label": "field.label.session",
+    "session.cohort": "field.cohort.batch",
+    "session.subject": "field.subject",
+    "session.course": "field.course",
+    "session.unit": "field.unit.chapter",
+    "content.assignments": "field.assignments.homework"
+  },
+  "promotions": {
+    "session.cohort": "critical"
+  },
+  "approver_role": "role.owner",
+  "model_vocabulary": "a tutor or coaching-centre educator; sessions are batches or tutorials; cohort is the batch name"
+}

@@ -1,0 +1,30 @@
+{
+  "country": "BR",
+  "name": "Brazil",
+  "timezones": [
+    "America/Sao_Paulo",
+    "America/Manaus",
+    "America/Fortaleza",
+    "America/Recife",
+    "America/Belem",
+    "America/Cuiaba",
+    "America/Porto_Velho",
+    "America/Rio_Branco",
+    "America/Noronha"
+  ],
+  "default_timezone": null,
+  "locales": [
+    "pt-BR"
+  ],
+  "default_record_locale": "pt-BR",
+  "approver_hierarchy": [
+    "school direction",
+    "municipal or state education secretariat"
+  ],
+  "academic_year_start_month": 2,
+  "academic_year_note": "school year starts in February",
+  "curriculum_frameworks": [
+    "BNCC"
+  ],
+  "data_residency": "BR"
+}

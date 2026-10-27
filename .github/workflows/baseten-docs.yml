@@ -1,0 +1,20 @@
+# Prints the Baseten docs pages the Baseten provider is built on into the job log (the development
+# sandbox cannot reach docs.baseten.co). Read-only, no secrets.
+name: Baseten docs
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'scripts/baseten_docs.sh'
+      - '.github/workflows/baseten-docs.yml'
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baseten docs (llms.txt + relevant pages)
+        run: bash scripts/baseten_docs.sh

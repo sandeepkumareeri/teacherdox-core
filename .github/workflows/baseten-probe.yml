@@ -1,0 +1,45 @@
+# Baseten probe: makes a few raw calls
+# to Muse Spark Open (meta-models/muse-spark-open-1026) on synthetic data — text, system role, JSON
+# schema, the synthetic board image, and synthetic English / Malayalam voice notes — and logs what
+# comes back. Needs the BASETEN_API_KEY repository secret.
+name: Baseten probe
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'scripts/baseten_probe.js'
+      - 'src/engine/providers/baseten.js'
+      - '.github/workflows/baseten-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Synthetic voice notes (espeak-ng → OGG/Opus like WhatsApp, and 16 kHz WAV)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq espeak-ng ffmpeg >/dev/null
+          mkdir -p /tmp/audio
+          say() {
+            espeak-ng -v "$1" -w /tmp/raw.wav "$2"
+            ffmpeg -loglevel error -y -i /tmp/raw.wav -c:a libopus -b:a 24k "/tmp/audio/$1.ogg"
+            ffmpeg -loglevel error -y -i /tmp/raw.wav -ac 1 -ar 16000 -c:a pcm_s16le "/tmp/audio/$1.wav"
+          }
+          say en "Class eight B, mathematics, period two. Adding fractions with unlike denominators. Homework is exercise three point two, questions one to five."
+          say hi "कक्षा आठ बी, गणित। आज भिन्नों का जोड़ सिखाया। गृहकार्य अभ्यास तीन दो।"
+          say te "ఎనిమిదవ తరగతి బి, గణితం. ఈ రోజు భిన్నాల కూడిక నేర్పించాను. హోంవర్క్ అభ్యాసం మూడు రెండు."
+          say ml "എട്ടാം ക്ലാസ് ബി, ഗണിതം. ഇന്ന് ഭിന്നസംഖ്യകളുടെ കൂട്ടൽ പഠിപ്പിച്ചു. ഗൃഹപാഠം അഭ്യാസം മൂന്ന് രണ്ട്."
+          ls -la /tmp/audio
+      - name: Baseten pricing page (Muse Spark Open rows)
+        run: |
+          curl -sSL -m 30 https://www.baseten.co/pricing | sed 's/<[^>]*>/ /g' | tr -s ' \n' | grep -ioE '.{0,200}muse.{0,300}' | head -10 || echo "no Muse Spark Open price found on the page"
+      - name: Probe
+        env:
+          BASETEN_API_KEY: ${{ secrets.BASETEN_API_KEY }}
+          PROBE_AUDIO_DIR: /tmp/audio
+        run: node scripts/baseten_probe.js

@@ -7,4 +7,7 @@ module.exports = {
   ...require('./capsule'),
   ...require('./verify'),
   ...require('./seal'),
+  ...require('./schema'),
+  ...require('./countersign'),
+  ...require('./codes'),
 };
