@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "kid": "k_demo_sample",
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "KxUDfAoKTp6CrzQMhLXb3_WWVbzq4gbD3OTEVA3NSGg",
+      "alg": "ed25519",
+      "valid_from": "2026-10-01T00:00:00Z",
+      "valid_to": null,
+      "revoked_at": null
+    }
+  ]
+}

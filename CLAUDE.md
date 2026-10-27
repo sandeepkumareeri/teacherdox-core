@@ -26,7 +26,7 @@ npm test        # node --test test/*.test.js — no dependencies needed
 
 Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
-## Status (27 Oct 2026, evening)
+## Status (27 Oct 2026, night)
 
 Done:
 - `spec/00-core-architecture.md`, `spec/tdx-2.0.md` (§6 schema conformance, §7 provenance step fields).
@@ -54,9 +54,24 @@ Done:
   approval). The engine takes promotions/vocabulary/kinds from institution packs, time zone and record
   language defaults from country packs, thresholds/steps/lag/auto-lock from policy packs.
   `packs.describe(result)` = one educator-facing sentence per outcome.
-- Tests: 42 passing (`test/tdx.test.js`, `test/schema.test.js`, `test/engine.test.js`,
-  `test/packs.test.js`; shared mocks in `test/helpers.js` — the Meta API mocked per the notes;
-  ffmpeg tests skip without ffmpeg).
+- `src/tdx/countersign.js`: approver countersignatures of a locked capsule or a day seal (separate
+  signed statements pointing at the target's hash — capsules stay immutable). Spec §8.
+- `src/api/` REST API on `node:http` (docs in `docs/api.md`): bearer tokens per tenant (tenant always
+  from the token), `POST /v1/records` → in-process job queue (202, or `?wait=1`), lock (only if routing
+  says auto_lock) / confirm (with whitelisted corrections → `edited_fields`) / amend / countersign,
+  day seal + countersign + Merkle proof, `GET /v1/days/...` = exportable day, public `POST /v1/verify`,
+  `/v1/keys`. Chain appends serialised per educator-day. `store.js`: memory or `TDX_DATA_DIR` files
+  (never overwritten; reloaded at start). `main.js` reads env (`TDX_API_TOKENS`, `TDX_SIGNING_KEY_FILE`,
+  `TDX_SIGNING_KEY_ID`, `TDX_KEY_REGISTRY`, `TDX_DATA_DIR`, `META_API_KEY`).
+- `src/verifier/`: `report.js` (`verifyBundle` for any input: capsules, day exports, seals,
+  countersignatures, embedded-key warning), `webverify.js` (second implementation on WebCrypto only —
+  tests require identical reports to the reference), browser bundle builder. `verifier/index.html`
+  (public page at `/verify/`, verifies in the browser, sample + "change one homework line" demo),
+  `verifier/tdx-verify.js` (generated: `npm run build:verifier`; a test fails if stale),
+  `verifier/samples/` (synthetic day from `npm run build:sample`, demo key's public half only).
+- `bin/tdx` CLI: `verify`, `validate`, `hash`, `keygen`, `process` (engine), `serve`.
+- Tests: 53 passing (`tdx`, `schema`, `engine`, `packs`, `verifier`, `api`; shared mocks in
+  `test/helpers.js` — the Meta API mocked per the notes; ffmpeg tests skip without ffmpeg).
 - `scripts/engine-live.js` + `.github/workflows/engine-live.yml`: live run on synthetic evidence
   (board fixture + espeak-ng OGG voice notes in en/hi/te/ml/pt). **Not yet run** — needs the
   `META_API_KEY` secret on this repo (optional `GEMINI_API_KEY` secret + `GEMINI_MODEL` variable).
@@ -71,9 +86,10 @@ Next, in order:
 1. Run *Engine live run* in Actions; fix anything the real API disagrees with; record results in
    `docs/meta-model-api-notes.md`.
 2. Native-speaker review of the ml / te / hi / pt-BR / id / fr packs (ask Sandeep).
-3. REST API `src/api/` (Node http, no framework needed) + public verifier page + `bin/tdx` CLI
-   (`tdx verify file.json --keys keys.json`).
-4. Queue-based processing + cost/latency telemetry.
+3. Deploy the API + verifier page somewhere public for the demo (decide with Sandeep: the TeacherDox
+   server or a separate host; needs a real signing key and published registry).
+4. Durable queue (jobs are in memory today — lost on restart; capsules are not) + cost/latency
+   telemetry endpoint aggregated from provenance steps.
 5. `eval/`: harness comparing Meta vs Gemini on consented samples (accuracy, latency, cost).
 6. Integration into the private product as the first channel (its `gemini.js` boundary:
    `fromGenerate(gemini.generate)` as fallback, `allow_providers` from `META_AI_PHONES`).

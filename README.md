@@ -36,6 +36,10 @@ photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  
 | `src/engine/` | Record Engine: capability router, Meta provider (SAM 3.1, Muse Voice Transcribe, Muse Spark), host-supplied fallback, locate → listen → read → check → score |
 | [`packs/`](packs/README.md) | Locale (en, ml, te, hi, pt-BR, id, fr), institution, country (IN, BR, ID, FR, SN) and policy packs |
 | `src/packs/` | Pack loader, `t()` with plurals, field labels per institution, `describe()` for engine results |
+| `src/api/` | REST API `/v1` on `node:http` — capture, lock / confirm / amend, countersign, day seal, proofs, verify ([`docs/api.md`](docs/api.md)) |
+| `src/verifier/` | Verification report for any input; a second, WebCrypto-only verifier that runs in the browser |
+| [`verifier/`](verifier/index.html) | Public verifier page (served at `/verify/`), its browser bundle and a synthetic sample day |
+| `bin/tdx` | CLI: `verify`, `validate`, `hash`, `keygen`, `process`, `serve` |
 | `test/` | Tests (`npm test`) — Meta API mocked with the shapes in `docs/meta-model-api-notes.md` |
 | `scripts/engine-live.js` | Live run on synthetic evidence (Actions → *Engine live run*, needs `META_API_KEY`) |
 
@@ -85,6 +89,19 @@ const { capsule, routing, transcripts } = await engine.process({
 Institution, country and policy packs shape every run: the vocabulary the model is given, which fields are critical (a university's course, a school's class), the time zone and record language when the channel does not send them, the confidence thresholds, and how late a capture may be. `packs.describe(result)` turns the outcome into one sentence in the educator's language (e.g. Malayalam: "രേഖപ്പെടുത്തി. ഒപ്പിടാൻ തയ്യാർ.").
 
 Providers are tried in order and skipped when they lack the capability, cannot take the input, are not allowed for this educator (`allow_providers`, for consent) or have hit their daily limit; errors and timeouts fall through. If nothing usable was read or heard, no model is asked to invent a record — the draft is held.
+
+### API, verifier and CLI
+
+```bash
+tdx keygen k_2026_10                                   # signing key (keys/ is git-ignored)
+TDX_API_TOKENS=tok:t_demo TDX_SIGNING_KEY_FILE=keys/k_2026_10.pem TDX_SIGNING_KEY_ID=k_2026_10 \
+  TDX_KEY_REGISTRY=keys/k_2026_10.public.json TDX_DATA_DIR=data META_API_KEY=… tdx serve
+tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json   # → VALID
+```
+
+The record lifecycle over HTTP: `POST /v1/records` (capture; returns at once, the engine runs in the background) → `lock` (only if the policy allows auto-lock) or `confirm` (the educator, optionally with corrections) → `amend` (a correction is a new signed record) → `countersign` (an approver) → `POST /v1/days/…/seal` → `GET /v1/days/…` (the exportable day). See [`docs/api.md`](docs/api.md).
+
+**Verification never needs our servers.** The verifier page at `/verify/` checks signatures, the day's hash chain, the Merkle seal and countersignatures in the browser with WebCrypto — a second implementation, independent of the reference one, and the tests require both to give identical reports. The same check runs from the command line (`tdx verify`) or as a library.
 
 ## License
 

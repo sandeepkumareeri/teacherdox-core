@@ -8,4 +8,5 @@ module.exports = {
   ...require('./verify'),
   ...require('./seal'),
   ...require('./schema'),
+  ...require('./countersign'),
 };

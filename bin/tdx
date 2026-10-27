@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+'use strict';
+// tdx — command-line tools for .tdx records.
+//
+//   tdx verify <file...> [--keys keys.json] [--json]   verify capsules / day exports / seals / countersignatures
+//   tdx validate <file...>                             schema check only
+//   tdx hash <file>                                    capsule hash
+//   tdx keygen <key-id> [--out keys/]                  new Ed25519 signing key (private PEM + public registry entry)
+//   tdx process [--image f] [--audio f] [--text "…"] --context ctx.json   run the Record Engine (needs META_API_KEY)
+//   tdx serve [--port 8080]                            REST API + verifier page (see src/api/main.js for env)
+
+const fs = require('node:fs');
+const path = require('node:path');
+const tdx = require('../src/tdx');
+const { verify } = require('../src/verifier');
+
+const USAGE = `usage:
+  tdx verify <file...> [--keys keys.json] [--json]
+  tdx validate <file...>
+  tdx hash <file>
+  tdx keygen <key-id> [--out keys/]
+  tdx process [--image photo.jpg]... [--audio note.ogg]... [--text "..."] --context context.json
+  tdx serve [--port 8080] [--host 127.0.0.1]`;
+
+function parse(argv) {
+  const pos = [], opt = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const k = a.slice(2);
+      const v = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true;
+      opt[k] = opt[k] === undefined ? v : [].concat(opt[k], v);
+    } else pos.push(a);
+  }
+  return { pos, opt };
+}
+const readJson = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+const die = (msg, code = 2) => { console.error(msg); process.exit(code); };
+const list = v => (v === undefined ? [] : [].concat(v));
+
+const MEDIA = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
+
+const commands = {
+  async verify({ pos, opt }) {
+    if (!pos.length) die(USAGE);
+    const inputs = pos.map(readJson);
+    const registry = opt.keys ? readJson(opt.keys) : null;
+    const r = await verify(inputs, registry);
+    if (opt.json) { console.log(JSON.stringify(r, null, 2)); return r.ok ? 0 : 1; }
+    if (!registry) console.log(`! no --keys given; keys: ${r.registry_source}`);
+    for (const c of r.capsules) {
+      const s = c.summary;
+      const what = [s.date, s.label, s.cohort, s.subject || s.course, s.unit].filter(Boolean).join(' · ');
+      console.log(`${c.ok ? '✓' : '✗'} ${c.capsule_id}  ${c.state}${c.effective ? '' : c.state.endsWith('locked') ? ' (superseded)' : ''}  ${what}`);
+      for (const e of c.errors) console.log(`    ${e}`);
+    }
+    for (const d of r.days) {
+      console.log(`${d.ok ? '✓' : '✗'} day ${d.scope}: ${d.count} signed, chain ${d.ok ? 'intact' : 'broken'}${d.seal ? `, seal ${d.seal.ok ? 'valid' : 'INVALID'}` : ', not sealed'}`);
+      for (const e of [...d.errors, ...(d.seal ? d.seal.errors : [])]) console.log(`    ${e}`);
+    }
+    for (const c of r.countersignatures) {
+      console.log(`${c.ok ? '✓' : '✗'} countersignature: ${c.role} ${c.approver_ref} ${c.decision} (${c.target.type === 'day_seal' ? 'whole day' : 'record'})`);
+      for (const e of c.errors) console.log(`    ${e}`);
+    }
+    const other = r.errors.filter(e => !r.days.some(d => e.startsWith(d.scope)) && !/^countersignature/.test(e) && !r.capsules.some(c => e.startsWith(String(c.capsule_id))));
+    for (const e of other) console.log(`✗ ${e}`);
+    console.log(r.ok ? 'VALID' : 'INVALID');
+    return r.ok ? 0 : 1;
+  },
+
+  validate({ pos }) {
+    if (!pos.length) die(USAGE);
+    let bad = 0;
+    for (const f of pos) {
+      const data = readJson(f);
+      for (const c of [].concat(data.capsules || data)) {
+        const v = tdx.validateCapsule(c);
+        console.log(`${v.ok ? '✓' : '✗'} ${f} ${c.capsule_id || ''}`);
+        v.errors.forEach(e => console.log(`    ${e}`));
+        if (!v.ok) bad++;
+      }
+    }
+    return bad ? 1 : 0;
+  },
+
+  hash({ pos }) {
+    if (pos.length !== 1) die(USAGE);
+    console.log(tdx.capsuleHash(readJson(pos[0])));
+    return 0;
+  },
+
+  keygen({ pos, opt }) {
+    const kid = pos[0];
+    if (!kid || !/^[A-Za-z0-9_.-]{1,64}$/.test(kid)) die('keygen: give a key id (letters, digits, _ . -)');
+    const dir = typeof opt.out === 'string' ? opt.out : 'keys';
+    const k = tdx.generateKey(kid);
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const pem = path.join(dir, `${kid}.pem`);
+    fs.writeFileSync(pem, k.privateKeyPem, { mode: 0o600, flag: 'wx' });
+    fs.writeFileSync(path.join(dir, `${kid}.public.json`), JSON.stringify({ keys: [k.publicEntry] }, null, 2) + '\n', { flag: 'wx' });
+    console.error(`private key: ${pem} (keep it secret; never commit it)`);
+    console.log(JSON.stringify(k.publicEntry, null, 2));
+    return 0;
+  },
+
+  async process({ opt }) {
+    if (!opt.context) die(USAGE);
+    const { createRecordEngine } = require('../src/engine');
+    const { describe } = require('../src/packs');
+    const evidence = [...list(opt.image), ...list(opt.audio)].map(f => ({ bytes: fs.readFileSync(f), media_type: MEDIA[path.extname(f).toLowerCase()] || die(`unknown file type: ${f}`) }));
+    const engine = createRecordEngine({ dailyLimit: { meta: Number(process.env.TDX_META_DAILY_LIMIT || 100) } });
+    const r = await engine.process({ evidence, text: list(opt.text), context: readJson(opt.context) });
+    const m = describe(r);
+    console.error(`${r.routing.decision}: ${m.status}  ${m.line}`);
+    for (const s of r.steps) console.error(`  ${s.step.padEnd(6)} ${s.provider}/${s.model || '-'} ${s.status} ${s.ms ?? '-'} ms${s.attempts ? `  (${s.attempts.map(a => `${a.provider}: ${a.error}`).join('; ')})` : ''}`);
+    console.log(JSON.stringify(r.capsule, null, 2));
+    return 0;
+  },
+
+  async serve({ opt }) {
+    const { start } = require('../src/api/main');
+    await start({ port: Number(opt.port || process.env.PORT || 8080), host: typeof opt.host === 'string' ? opt.host : process.env.HOST || '127.0.0.1' });
+    return null;   // keep running
+  },
+};
+
+(async () => {
+  const [cmd, ...rest] = process.argv.slice(2);
+  if (!commands[cmd]) die(USAGE, cmd ? 2 : 0);
+  try {
+    const code = await commands[cmd](parse(rest));
+    if (code !== null) process.exitCode = code;
+  } catch (e) {
+    die(`tdx ${cmd}: ${e.message}`, 2);
+  }
+})();

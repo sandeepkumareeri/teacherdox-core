@@ -128,3 +128,19 @@ The schema allows unknown members everywhere (consumers MUST ignore them within 
 ## 7. Provenance step fields
 
 Each `provenance.steps[]` item has `step` (`locate | listen | read | check | score`), `capability` (`segment | transcribe | structure | verify | score`) and `provider`, and MAY carry `model`, `status` (`ok | fallback | skipped | failed`), `ms`, `cost_usd` (`null` when the provider's price is unknown — never estimated), `tokens { input, output }`, `evidence` (the evidence hash the step worked on) and `attempts[]` (each provider tried before the one that answered, with its error). `provenance` MAY also carry `flags[]` (fields the check step found contradicted or unsupported by the evidence) and `routing` (the confidence-routing decision: `auto_lock | confirm | hold`, the policy used, and which fields were auto-accepted or need confirmation).
+
+## 8. Countersignatures
+
+An approver (headmaster, head of department, supervisor — the role comes from the institution pack) attests a locked record or a whole sealed day. Because signed capsules are immutable, a countersignature is a separate signed statement that names its target by hash; the capsule's `approval` member stays `null` in capsules produced by the reference implementation.
+
+```jsonc
+{
+  "type": "tdx-countersignature",
+  "target": { "type": "capsule", "id": "<capsule_id>", "hash": "sha256:…" },   // or { "type": "day_seal", "id": "<day scope>", … }
+  "approver_ref": "e_…", "role": "headmaster", "decision": "approved",          // approved | returned
+  "note": null, "signed_at": "2026-10-28T12:05:00Z",
+  "signature": { "alg": "ed25519", "key_id": "…", "sig": "…" }                  // over JCS of everything but `signature`
+}
+```
+
+The target hash is the capsule hash (§1), or `sha256(JCS(seal))` for a day seal. A verifier MUST check the signature and the key's validity at `signed_at` as for capsules, and MUST check the target hash against the record or seal it is shown with. Countersigning a day seal attests every record the seal covers; when records are added to a day after it was sealed, the day is sealed again and the earlier countersignature keeps pointing at the earlier seal.
