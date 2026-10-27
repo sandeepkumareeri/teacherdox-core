@@ -1,7 +1,7 @@
 # Photo pipeline on Meta's models, live, on the synthetic board photo (never educator data):
 # SAM 3.1 → crop → Muse Spark read → Muse Spark check → draft .tdx 2.0 capsule → signed + verified.
 # Results: annotations, the job summary, and the "photo-live" artifact (draft, signed capsule,
-# board crop, throwaway public key). Needs the META_API_KEY repository secret.
+# board crop, throwaway public key). Needs the META_API_KEY repository secret (added 27 Oct).
 name: Photo pipeline live
 on:
   workflow_dispatch:
