@@ -1,0 +1,49 @@
+# CI on every push and pull request: the test suite on Linux and Windows, a type check of the
+# trust layer (JSDoc, no build step), and test coverage in the job summary.
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - name: Test (no dependencies needed)
+        run: npm test
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - name: Install dev dependencies (typescript, @types/node)
+        run: npm install --no-audit --no-fund
+      - name: tsc --noEmit --checkJs (src/tdx)
+        run: npm run typecheck
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - name: Coverage
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run -s coverage | tee coverage.txt
+          {
+            echo '## Test coverage'
+            echo '```'
+            sed -n '/start of coverage report/,/end of coverage report/p' coverage.txt | sed 's/^# //'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -9,10 +9,20 @@
 // - `undefined` members are dropped (as JSON.stringify does); non-finite numbers,
 //   functions, symbols and BigInt are rejected — they have no canonical form.
 
+/**
+ * RFC 8785 canonical JSON text of a value.
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalize(value) {
   return serialize(value, new Set());
 }
 
+/**
+ * @param {any} v
+ * @param {Set<object>} seen  objects on the current path (cycle detection)
+ * @returns {string}
+ */
 function serialize(v, seen) {
   if (v === null) return 'null';
   switch (typeof v) {

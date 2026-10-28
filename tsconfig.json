@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["es2023"],
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": ["src/tdx/**/*.js"]
+}

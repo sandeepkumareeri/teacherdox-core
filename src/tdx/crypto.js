@@ -3,15 +3,25 @@
 
 const crypto = require('node:crypto');
 
+/** @param {Uint8Array | string} buf */
 const b64url = buf => Buffer.from(buf).toString('base64url');
+/** @param {unknown} s */
 const fromB64url = s => Buffer.from(String(s), 'base64url');
 
-/** "sha256:<hex>" of a string or bytes. */
+/**
+ * "sha256:<hex>" of a string or bytes.
+ * @param {string | Uint8Array} data
+ * @returns {string}
+ */
 function sha256(data) {
   return 'sha256:' + crypto.createHash('sha256').update(data).digest('hex');
 }
 
-/** UUIDv7 (RFC 9562): 48-bit Unix ms timestamp + random — time-ordered. */
+/**
+ * UUIDv7 (RFC 9562): 48-bit Unix ms timestamp + random — time-ordered.
+ * @param {number} [now]  Unix ms
+ * @returns {string}
+ */
 function uuidv7(now = Date.now()) {
   const b = crypto.randomBytes(16);
   const ts = BigInt(now);
@@ -22,7 +32,11 @@ function uuidv7(now = Date.now()) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-/** Milliseconds encoded in a UUIDv7. */
+/**
+ * Milliseconds encoded in a UUIDv7.
+ * @param {string} id
+ * @returns {number}
+ */
 function uuidv7Time(id) {
   return Number(BigInt('0x' + String(id).replace(/-/g, '').slice(0, 12)));
 }
@@ -30,6 +44,9 @@ function uuidv7Time(id) {
 /**
  * New Ed25519 signing key. Returns the private key (keep secret) and the public
  * JWK-style entry for the key registry.
+ * @param {string} keyId
+ * @param {{ validFrom?: string, validTo?: string | null }} [opts]
+ * @returns {import('./types').GeneratedKey}
  */
 function generateKey(keyId, { validFrom = new Date().toISOString(), validTo = null } = {}) {
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
@@ -37,13 +54,17 @@ function generateKey(keyId, { validFrom = new Date().toISOString(), validTo = nu
   return {
     keyId,
     privateKeyPem: privateKey.export({ format: 'pem', type: 'pkcs8' }).toString(),
-    publicEntry: { kid: keyId, kty: 'OKP', crv: 'Ed25519', x: jwk.x, alg: 'ed25519', valid_from: validFrom, valid_to: validTo, revoked_at: null },
+    publicEntry: { kid: keyId, kty: 'OKP', crv: 'Ed25519', x: /** @type {string} */ (jwk.x), alg: 'ed25519', valid_from: validFrom, valid_to: validTo, revoked_at: null },
   };
 }
 
 /**
  * Ed25519 key from a 32-byte seed (hex). Deterministic — for test vectors and for keys held
  * in an HSM/KMS export format. Never use a published seed for real records.
+ * @param {string} keyId
+ * @param {string} seedHex
+ * @param {{ validFrom?: string | null, validTo?: string | null, revokedAt?: string | null }} [opts]
+ * @returns {import('./types').GeneratedKey}
  */
 function keyFromSeed(keyId, seedHex, { validFrom = null, validTo = null, revokedAt = null } = {}) {
   const seed = Buffer.from(String(seedHex), 'hex');
@@ -54,14 +75,27 @@ function keyFromSeed(keyId, seedHex, { validFrom = null, validTo = null, revoked
   return {
     keyId,
     privateKeyPem: privateKey.export({ format: 'pem', type: 'pkcs8' }).toString(),
-    publicEntry: { kid: keyId, kty: 'OKP', crv: 'Ed25519', x: jwk.x, alg: 'ed25519', valid_from: validFrom, valid_to: validTo, revoked_at: revokedAt },
+    publicEntry: { kid: keyId, kty: 'OKP', crv: 'Ed25519', x: /** @type {string} */ (jwk.x), alg: 'ed25519', valid_from: validFrom, valid_to: validTo, revoked_at: revokedAt },
   };
 }
 
+/**
+ * Ed25519 signature (base64url) over bytes.
+ * @param {string} privateKeyPem  PKCS#8 PEM
+ * @param {string | Uint8Array} bytes
+ * @returns {string}
+ */
 function signBytes(privateKeyPem, bytes) {
   return b64url(crypto.sign(null, Buffer.from(bytes), crypto.createPrivateKey(privateKeyPem)));
 }
 
+/**
+ * True when `sig` is a valid Ed25519 signature of `bytes` by the registry key.
+ * @param {{ x: string }} publicEntry
+ * @param {string | Uint8Array} bytes
+ * @param {string} sig  base64url
+ * @returns {boolean}
+ */
 function verifyBytes(publicEntry, bytes, sig) {
   const key = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: publicEntry.x }, format: 'jwk' });
   try { return crypto.verify(null, Buffer.from(bytes), key, fromB64url(sig)); } catch { return false; }

@@ -33,7 +33,11 @@ const CODES = [
   ['countersignature_target_missing', /it countersigns was not provided/],
 ];
 
-/** Sorted, de-duplicated failure codes for a list of verifier messages. */
+/**
+ * Sorted, de-duplicated failure codes for a list of verifier messages.
+ * @param {readonly string[] | null | undefined} messages
+ * @returns {string[]}
+ */
 function errorCodes(messages) {
   const out = new Set();
   for (const m of messages || []) for (const [code, re] of CODES) if (re.test(m)) out.add(code);

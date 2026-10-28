@@ -14,7 +14,11 @@ const { LOCKED, capsuleHash } = require('./capsule');
 
 const DECISIONS = new Set(['approved', 'returned']);
 
-/** Hash and id of what is being countersigned: a locked capsule or a day seal. */
+/**
+ * Hash and id of what is being countersigned: a locked capsule or a day seal.
+ * @param {any} x
+ * @returns {import('./types').CountersignTarget}
+ */
 function targetOf(x) {
   if (x?.type === 'tdx-day-seal') return { type: 'day_seal', id: x.scope, hash: sha256(canonicalize(x)) };
   if (x?.format === 'tdx') {
@@ -24,15 +28,28 @@ function targetOf(x) {
   throw new Error('tdx/countersign: target must be a locked capsule or a day seal');
 }
 
+/**
+ * An approver's signed statement about a locked capsule or a day seal.
+ * @param {import('./types').Capsule | import('./types').DaySeal} target
+ * @param {{ key: import('./types').SigningKey, approverRef: string, role: string, decision?: 'approved' | 'returned', note?: string | null, signedAt?: string }} opts
+ * @returns {import('./types').Countersignature}
+ */
 function countersign(target, { key, approverRef, role, decision = 'approved', note = null, signedAt = new Date().toISOString() }) {
   if (!DECISIONS.has(decision)) throw new Error(`tdx/countersign: decision must be approved or returned, not ${decision}`);
   if (!approverRef || !role) throw new Error('tdx/countersign: approverRef and role are required');
-  const statement = { type: 'tdx-countersignature', target: targetOf(target), approver_ref: approverRef, role, decision, note, signed_at: signedAt };
+  const statement = { type: /** @type {const} */ ('tdx-countersignature'), target: targetOf(target), approver_ref: approverRef, role, decision, note, signed_at: signedAt };
   return { ...statement, signature: { alg: 'ed25519', key_id: key.keyId, sig: signBytes(key.privateKeyPem, canonicalize(statement)) } };
 }
 
-/** → { ok, errors[] }. With `target`, also checks the countersignature points at exactly it. */
+/**
+ * → { ok, errors[] }. With `target`, also checks the countersignature points at exactly it.
+ * @param {any} cs
+ * @param {import('./types').KeyRegistry | null | undefined} registry
+ * @param {import('./types').Capsule | import('./types').DaySeal} [target]
+ * @returns {import('./types').CheckResult}
+ */
 function verifyCountersignature(cs, registry, target) {
+  /** @type {string[]} */
   const errors = [];
   const { signature, ...statement } = cs || {};
   if (statement.type !== 'tdx-countersignature') errors.push('not a countersignature');
@@ -51,7 +68,7 @@ function verifyCountersignature(cs, registry, target) {
   }
   if (target) {
     let t = null;
-    try { t = targetOf(target); } catch (e) { errors.push(e.message); }
+    try { t = targetOf(target); } catch (e) { errors.push(/** @type {Error} */ (e).message); }
     if (t && (t.hash !== statement.target?.hash || t.type !== statement.target?.type)) errors.push('countersignature is for a different record');
   }
   return { ok: errors.length === 0, errors };

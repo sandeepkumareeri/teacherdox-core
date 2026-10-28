@@ -1,0 +1,7 @@
+# Check out text files with LF on every OS: generated files (verifier bundle, vectors) are compared
+# byte for byte by the tests, and Windows runners would otherwise convert them to CRLF.
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.ogg binary
+*.wav binary

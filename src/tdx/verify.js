@@ -9,10 +9,17 @@ const { FORMAT, LOCKED, signingInput, capsuleHash, chainScope } = require('./cap
 const { verifyBytes, uuidv7Time } = require('./crypto');
 const { validateCapsule } = require('./schema');
 
+/** @param {any} o @param {string} path @returns {any} */
 const get = (o, path) => path.split('.').reduce((x, k) => (x == null ? undefined : x[k]), o);
 
-/** Structural + cryptographic check of one capsule. → { ok, hash, errors[] } */
+/**
+ * Structural + cryptographic check of one capsule. → { ok, hash, errors[] }
+ * @param {any} env
+ * @param {import('./types').KeyRegistry | null | undefined} registry
+ * @returns {{ ok: boolean, hash: string | null, errors: string[] }}
+ */
 function verifyCapsule(env, registry) {
+  /** @type {string[]} */
   const errors = [];
   if (!env || typeof env !== 'object') return { ok: false, hash: null, errors: ['not an object'] };
   if (env.format !== FORMAT) errors.push(`format must be "${FORMAT}"`);
@@ -43,7 +50,7 @@ function verifyCapsule(env, registry) {
     errors.push(`unknown lifecycle state ${state}`);
   }
   let hash = null;
-  try { hash = capsuleHash(env); } catch (e) { errors.push(`cannot hash: ${e.message}`); }
+  try { hash = capsuleHash(env); } catch (e) { errors.push(`cannot hash: ${/** @type {Error} */ (e).message}`); }
   return { ok: errors.length === 0, hash, errors };
 }
 
@@ -51,10 +58,16 @@ function verifyCapsule(env, registry) {
  * Verify every locked capsule of one or more educator-days: signatures, chain
  * contiguity and links, amendments, and the effective record per entry.
  * → { ok, days: [{ scope, ok, count, errors[], effective: [capsule_id] }], errors[] }
+ * @param {any[]} capsules
+ * @param {import('./types').KeyRegistry | null | undefined} registry
+ * @returns {{ ok: boolean, days: Array<{ scope: string, ok: boolean, count: number, errors: string[], effective: string[] }>, errors: string[] }}
  */
 function verifyDay(capsules, registry) {
+  /** @type {string[]} */
   const errors = [];
+  /** @type {Map<string, import('./types').Capsule[]>} */
   const byScope = new Map();
+  /** @type {Map<string, { c: import('./types').Capsule, hash: string | null }>} */
   const byId = new Map();
   for (const c of capsules) {
     const r = verifyCapsule(c, registry);
@@ -63,18 +76,20 @@ function verifyDay(capsules, registry) {
     byId.set(c.capsule_id, { c, hash: r.hash });
     const s = chainScope(c);
     if (!byScope.has(s)) byScope.set(s, []);
-    byScope.get(s).push(c);
+    /** @type {import('./types').Capsule[]} */ (byScope.get(s)).push(c);
   }
 
+  /** @type {Array<{ scope: string, ok: boolean, count: number, errors: string[], effective: string[] }>} */
   const days = [];
   for (const [scope, list] of byScope) {
+    /** @type {string[]} */
     const e = [];
     list.sort((a, b) => a.body.chain.sequence_index - b.body.chain.sequence_index);
     list.forEach((c, i) => {
       const { sequence_index, prev_hash } = c.body.chain;
       if (sequence_index !== i) e.push(`gap or duplicate in sequence at index ${i} (found ${sequence_index}) — a record is missing or inserted`);
       if (i === 0 && prev_hash !== null) e.push('first record of the day must have prev_hash = null');
-      if (i > 0 && prev_hash !== byId.get(list[i - 1].capsule_id).hash) e.push(`record ${sequence_index} does not link to record ${sequence_index - 1} — chain broken`);
+      if (i > 0 && prev_hash !== byId.get(list[i - 1].capsule_id)?.hash) e.push(`record ${sequence_index} does not link to record ${sequence_index - 1} — chain broken`);
       const a = c.body.amendment;
       if (a) {
         const orig = byId.get(a.amends_capsule_id);
@@ -92,9 +107,14 @@ function verifyDay(capsules, registry) {
   return { ok: errors.length === 0, days, errors };
 }
 
-/** One effective capsule per entry_id: the newest that no other capsule amends. */
+/**
+ * One effective capsule per entry_id: the newest that no other capsule amends.
+ * @param {import('./types').Capsule[]} list
+ * @returns {string[]}
+ */
 function effectiveIds(list) {
   const amended = new Set(list.map(c => c.body.amendment?.amends_capsule_id).filter(Boolean));
+  /** @type {Map<string, import('./types').Capsule>} */
   const byEntry = new Map();
   for (const c of list) {
     if (amended.has(c.capsule_id)) continue;

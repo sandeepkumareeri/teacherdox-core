@@ -12,20 +12,38 @@ const SPEC_VERSION = '2.0.0';
 const LOCKED = new Set(['auto_locked', 'confirmed_locked']);
 const STATES = new Set(['draft', 'held', 'auto_locked', 'confirmed_locked']);
 
+/**
+ * @template T
+ * @param {T} o
+ * @returns {T}
+ */
 const clone = o => JSON.parse(JSON.stringify(o));
 
-/** Bytes that a signature covers: JCS({format, spec_version, capsule_id, body}). */
+/**
+ * Bytes that a signature covers: JCS({format, spec_version, capsule_id, body}).
+ * @param {import('./types').Capsule} envelope
+ * @returns {string}
+ */
 function signingInput(envelope) {
   const { format, spec_version, capsule_id, body } = envelope;
   return canonicalize({ format, spec_version, capsule_id, body });
 }
 
-/** sha256 over the JCS form of the full signed envelope (signature included). */
+/**
+ * sha256 over the JCS form of the full signed envelope (signature included).
+ * @param {import('./types').Capsule} envelope
+ * @returns {string}
+ */
 function capsuleHash(envelope) {
   return sha256(canonicalize(envelope));
 }
 
-/** A new draft capsule. `body` must carry tenant, actor, session…; entry_id is created if absent. */
+/**
+ * A new draft capsule. `body` must carry tenant, actor, session…; entry_id is created if absent.
+ * @param {import('./types').CapsuleBody} body
+ * @param {{ capsuleId?: string }} [opts]
+ * @returns {import('./types').Capsule}
+ */
 function draft(body, { capsuleId = uuidv7() } = {}) {
   const b = clone(body);
   b.entry_id = b.entry_id || uuidv7();
@@ -34,7 +52,13 @@ function draft(body, { capsuleId = uuidv7() } = {}) {
   return { format: FORMAT, spec_version: SPEC_VERSION, capsule_id: capsuleId, body: b };
 }
 
-/** Attach a signature (returns a new envelope). key: { keyId, privateKeyPem }. */
+/**
+ * Attach a signature (returns a new envelope).
+ * @param {import('./types').Capsule} envelope
+ * @param {import('./types').SigningKey} key
+ * @param {string} [signedAt]
+ * @returns {import('./types').Capsule}
+ */
 function sign(envelope, key, signedAt = new Date().toISOString()) {
   const env = clone(envelope);
   delete env.signature;
@@ -47,10 +71,14 @@ function sign(envelope, key, signedAt = new Date().toISOString()) {
  *   prev:        the latest locked capsule in the same chain scope, or null for the first of the day
  *   state:       'auto_locked' (machine-attested) or 'confirmed_locked' (human-attested)
  *   attestation: RFC-002 §9 block (policy, auto-accepted / confirmed fields, confirmation receipt)
+ * @param {{ body: import('./types').CapsuleBody }} draftEnvelope
+ * @param {{ key: import('./types').SigningKey, prev?: import('./types').Capsule | null, state?: string, attestation?: object, signedAt?: string, capsuleId?: string }} opts
+ * @returns {import('./types').Capsule}
  */
 function lock(draftEnvelope, { key, prev = null, state = 'auto_locked', attestation = {}, signedAt, capsuleId = uuidv7() }) {
   if (!LOCKED.has(state)) throw new Error(`tdx/lock: state must be auto_locked or confirmed_locked, not ${state}`);
   if (prev && chainScope(prev) !== chainScope(draftEnvelope)) throw new Error('tdx/lock: prev capsule belongs to a different chain (tenant, educator, date)');
+  /** @type {import('./types').Capsule} */
   const env = { format: FORMAT, spec_version: SPEC_VERSION, capsule_id: capsuleId, body: clone(draftEnvelope.body) };
   env.body.lifecycle = { state };
   env.body.attestation = { statement_ref: 'tdx:attestation/reasonable-representation/1.0', mode: state === 'auto_locked' ? 'machine' : 'human', ...attestation };
@@ -63,6 +91,10 @@ function lock(draftEnvelope, { key, prev = null, state = 'auto_locked', attestat
 /**
  * A correction: a new locked capsule with the same entry_id, pointing at the capsule it amends,
  * appended to the chain like any other locked capsule (RFC-002 §7, §8).
+ * @param {import('./types').Capsule} original
+ * @param {import('./types').CapsuleBody} changes  fields to merge into the original body
+ * @param {{ key: import('./types').SigningKey, prev?: import('./types').Capsule | null, reason?: string, amendedFields?: string[], amenderRef?: string, state?: string, attestation?: object, signedAt?: string, capsuleId?: string }} opts
+ * @returns {import('./types').Capsule}
  */
 function amend(original, changes, { key, prev, reason, amendedFields = [], amenderRef, state = 'confirmed_locked', attestation = {}, signedAt, capsuleId }) {
   if (!LOCKED.has(original.body?.lifecycle?.state)) throw new Error('tdx/amend: only locked capsules can be amended');
@@ -71,12 +103,21 @@ function amend(original, changes, { key, prev, reason, amendedFields = [], amend
   return lock({ body }, { key, prev, state, attestation, signedAt, ...(capsuleId ? { capsuleId } : {}) });
 }
 
-/** Chain scope: one chain per (tenant, educator, local session date). */
+/**
+ * Chain scope: one chain per (tenant, educator, local session date).
+ * @param {{ body?: import('./types').CapsuleBody }} envelope
+ * @returns {string}
+ */
 function chainScope(envelope) {
   const b = envelope.body || {};
   return [b.tenant, b.actor?.educator_ref, b.session?.date].join('|');
 }
 
+/**
+ * @param {Record<string, any>} target
+ * @param {Record<string, any> | null | undefined} src
+ * @returns {Record<string, any>}
+ */
 function deepMerge(target, src) {
   for (const [k, v] of Object.entries(src || {})) {
     if (v && typeof v === 'object' && !Array.isArray(v) && target[k] && typeof target[k] === 'object' && !Array.isArray(target[k])) deepMerge(target[k], v);

@@ -6,15 +6,23 @@ const crypto = require('node:crypto');
 const { canonicalize } = require('./canonical');
 const { signBytes, verifyBytes } = require('./crypto');
 
+/** @param {...(number[] | string | Buffer)} parts */
 const h = (...parts) => crypto.createHash('sha256').update(Buffer.concat(parts.map(p => Buffer.from(p)))).digest();
+/** @param {string} hashStr */
 const leaf = hashStr => h([0x00], hashStr);              // domain-separated leaf/node hashing
+/** @param {Buffer} a @param {Buffer} b */
 const node = (a, b) => h([0x01], a, b);
 
-/** Merkle root (hex) over capsule hashes in sequence order. */
+/**
+ * Merkle root (hex) over capsule hashes in sequence order.
+ * @param {string[]} hashes
+ * @returns {string | null}
+ */
 function merkleRoot(hashes) {
   if (!hashes.length) return null;
-  let level = hashes.map(leaf);
+  let level = /** @type {Buffer[]} */ (hashes.map(leaf));
   while (level.length > 1) {
+    /** @type {Buffer[]} */
     const next = [];
     for (let i = 0; i < level.length; i += 2) next.push(i + 1 < level.length ? node(level[i], level[i + 1]) : level[i]);
     level = next;
@@ -22,13 +30,20 @@ function merkleRoot(hashes) {
   return level[0].toString('hex');
 }
 
-/** Inclusion proof for the record at `index`: sibling hashes from leaf to root. */
+/**
+ * Inclusion proof for the record at `index`: sibling hashes from leaf to root.
+ * @param {string[]} hashes
+ * @param {number} index
+ * @returns {import('./types').ProofStep[]}
+ */
 function merkleProof(hashes, index) {
-  let level = hashes.map(leaf), i = index;
+  let level = /** @type {Buffer[]} */ (hashes.map(leaf)), i = index;
+  /** @type {import('./types').ProofStep[]} */
   const proof = [];
   while (level.length > 1) {
     const sib = i ^ 1;
     if (sib < level.length) proof.push({ side: sib < i ? 'left' : 'right', hash: level[sib].toString('hex') });
+    /** @type {Buffer[]} */
     const next = [];
     for (let k = 0; k < level.length; k += 2) next.push(k + 1 < level.length ? node(level[k], level[k + 1]) : level[k]);
     level = next; i = Math.floor(i / 2);
@@ -36,18 +51,36 @@ function merkleProof(hashes, index) {
   return proof;
 }
 
+/**
+ * True when `proof` places `hashStr` under `root`.
+ * @param {string} hashStr
+ * @param {import('./types').ProofStep[]} proof
+ * @param {string} root
+ * @returns {boolean}
+ */
 function verifyProof(hashStr, proof, root) {
   let acc = leaf(hashStr);
   for (const p of proof) acc = p.side === 'left' ? node(Buffer.from(p.hash, 'hex'), acc) : node(acc, Buffer.from(p.hash, 'hex'));
   return acc.toString('hex') === root;
 }
 
-/** A signed seal for one educator-day. */
+/**
+ * A signed seal for one educator-day.
+ * @param {{ scope: string, hashes: string[], key: import('./types').SigningKey, sealedAt?: string }} args
+ * @returns {import('./types').DaySeal}
+ */
 function sealDay({ scope, hashes, key, sealedAt = new Date().toISOString() }) {
-  const seal = { type: 'tdx-day-seal', scope, count: hashes.length, merkle_root: merkleRoot(hashes), sealed_at: sealedAt };
+  const seal = { type: /** @type {const} */ ('tdx-day-seal'), scope, count: hashes.length, merkle_root: merkleRoot(hashes), sealed_at: sealedAt };
   return { ...seal, signature: { alg: 'ed25519', key_id: key.keyId, sig: signBytes(key.privateKeyPem, canonicalize(seal)) } };
 }
 
+/**
+ * Checks a seal's signature and key validity; with `hashes`, also that the root matches them.
+ * @param {import('./types').DaySeal} seal
+ * @param {import('./types').KeyRegistry | null | undefined} registry
+ * @param {string[]} [hashes]
+ * @returns {import('./types').CheckResult}
+ */
 function verifySeal(seal, registry, hashes) {
   const { signature, ...body } = seal;
   const key = (registry?.keys || []).find(k => k.kid === signature?.key_id);

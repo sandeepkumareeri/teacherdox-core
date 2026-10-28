@@ -4,14 +4,36 @@
   "description": "Teaching documentation infrastructure for the world: the open .tdx record, a multimodal record engine on Meta's models, and verifiable trust.",
   "license": "Apache-2.0",
   "main": "src/tdx/index.js",
-  "bin": { "tdx": "bin/tdx" },
-  "engines": { "node": ">=20" },
+  "bin": {
+    "tdx": "bin/tdx"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test test/*.test.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "coverage": "node --test --experimental-test-coverage test/*.test.js",
     "serve": "node bin/tdx serve",
     "build:verifier": "node -e \"require('fs').writeFileSync('verifier/tdx-verify.js', require('./src/verifier').buildBrowserBundle())\"",
     "build:sample": "node scripts/make-sample.js"
   },
-  "repository": { "type": "git", "url": "https://github.com/sandeepkumareeri/teacherdox-core" },
-  "keywords": ["teaching", "education", "records", "verifiable", "tdx", "whatsapp", "meta", "muse"]
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandeepkumareeri/teacherdox-core"
+  },
+  "keywords": [
+    "teaching",
+    "education",
+    "records",
+    "verifiable",
+    "tdx",
+    "whatsapp",
+    "meta",
+    "muse"
+  ],
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "typescript": "6.0.2"
+  }
 }
