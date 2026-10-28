@@ -26,7 +26,7 @@ npm test        # node --test test/*.test.js — no dependencies needed
 
 Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
-## Status (27 Oct 2026)
+## Status (28 Oct 2026)
 
 Built on branch `claude/exciting-faraday-exxt9l` (ahead of the plan below; gaps against the quality
 bar are listed under "Missing"):
@@ -47,7 +47,12 @@ bar are listed under "Missing"):
   seal, proofs, export; public verify; telemetry), `src/verifier/` (reference + WebCrypto
   implementation, identical reports), `verifier/` public page, `bin/tdx` (verify, validate, hash,
   keygen, process, serve). Docs: `docs/api.md`, `packs/README.md`.
-- Tests: `npm test` — 89 (tdx, schema, vectors, engine, packs, verifier, api, queue, baseten, eval, hosts).
+- Tests: `npm test` — 90 (tdx, schema, vectors, engine, packs, verifier, api, queue, baseten, eval, hosts).
+- CI (`ci.yml`): tests on ubuntu + windows, `npm run typecheck` (tsc strict checkJs over `src/tdx`, JSDoc
+  typedefs in `src/tdx/types.js`; typescript + @types/node devDependencies, no lockfile — the sandbox cannot
+  reach npm), coverage; `codeql.yml`; `release.yml` publishes a release from a `v*` tag with CHANGELOG notes.
+- Docs: `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `NOTICE`, `docs/quickstart.md`,
+  `docs/how-a-record-is-born.md` + `docs/examples/` (live draft; `confirm-and-sign.js` is deterministic).
 - Live runs: `.github/workflows/photo-live.yml` (photo pipeline on Meta, synthetic board) — **first
   live run succeeded 27 Oct** (SAM box exact, read correct, check flagged the inferred subject → confirm;
   12.4 s; see `docs/meta-model-api-notes.md`). The repo's `META_API_KEY` lost model access 11:49–~12:20
@@ -67,10 +72,9 @@ bar are listed under "Missing"):
   marked not comparable), `.github/workflows/eval.yml`, `eval/RESULTS.md` (runs 40547430902 + 40548212797: Meta Model API 81%, Gemini 77%, Muse Spark
   Open 69% field accuracy; boards 98% on answered cases for all; Gemini best on voice incl. one ml note).
 
-Missing against the quality bar: one eval run with all three working (Meta 404s, Vertex 429s); Gemini price in provenance; API error shape `{error:{code,message}}` + `spec/openapi.yaml`;
-CLI `inspect` / `seal`; JSDoc + `tsc --checkJs`; coverage; CI + CodeQL; SECURITY /
-CONTRIBUTING / CODE_OF_CONDUCT / CHANGELOG; quickstart + how-a-record-is-born + Mermaid diagrams;
-README rewrite; verifier page in brand style (#1B5E3B, DM Sans/Mono); tag v0.1.0.
+Missing against the quality bar: one eval run with all three working (Meta 404s, Vertex 429s); Gemini price in
+provenance; API error shape `{error:{code,message}}` + `spec/openapi.yaml`; CLI `inspect` / `seal`; verifier page
+in brand style (#1B5E3B, DM Sans/Mono).
 
 Open questions to check against dev.meta.ai (do not guess): system-role messages for Muse Spark (the
 engine puts instructions in the user turn); exact `languageBias` names beyond Hindi/English/Portuguese;

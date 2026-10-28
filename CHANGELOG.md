@@ -37,10 +37,14 @@ day-by-day log).
 
 ### Evaluation
 - `eval/` harness: 12 synthetic boards and 8 synthetic voice notes; per-field accuracy, latency,
-  tokens and cost; results in `eval/RESULTS.md` from real GitHub Actions runs.
+  tokens and cost; results in `eval/RESULTS.md` from real GitHub Actions runs. On 20 synthetic cases:
+  field accuracy Meta Model API 81%, Gemini 77%, Muse Spark Open 69%; boards 98% for each on the cases
+  they answered; Meta weaker on Malayalam and Telugu voice notes.
 
 ### Project
 - CI on Linux and Windows, strict JSDoc type check of `src/tdx`, coverage, CodeQL.
 - `SECURITY.md` (threat model), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `NOTICE`.
+- Docs: `docs/quickstart.md` (Windows PowerShell and Linux) and `docs/how-a-record-is-born.md` (a real
+  live run, reproducible signing with the published test key).
 
 [0.1.0]: https://github.com/sandeepkumareeri/teacherdox-core/releases/tag/v0.1.0
