@@ -1,112 +1,116 @@
 # TeacherDox Core
 
-**Teaching documentation infrastructure for the world.**
+**Open infrastructure that turns a photo or voice note from any classroom into a signed teaching
+record that anyone can verify.**
 
-Every session taught — a school period, a university lecture, a lab, a tutoring hour, a corporate workshop — captured in seconds from a photo or a voice note, in any language, and turned into a **verified, signed, portable teaching record**.
+| Step | What happens | Model |
+|---|---|---|
+| locate | find the board in the photo and crop to it | **SAM 3.1** (Meta Model API) |
+| listen | transcribe the voice note, in the educator's language | **Muse Voice Transcribe** (Meta Model API) |
+| read | turn crop, transcript and text into structured fields, each with a confidence | **Muse Spark** (Meta Model API) |
+| check | a second call checks every field against the evidence | **Muse Spark** (Meta Model API) |
+| read, check (second provider) | the same steps on Meta's open weights | **Muse Spark Open** on Baseten |
+| fallback | whatever the Meta models cannot do (e.g. Malayalam speech) | a model the host plugs in (e.g. Gemini) |
 
-TeacherDox Core is the infrastructure layer behind the TeacherDox WhatsApp product: an open record format (`.tdx` 2.0), a multimodal record engine built on Meta's models, and a trust layer that anyone can verify.
-
-> Built for the Meta Global AI Developer Hackathon (Oct 26 – Nov 4, 2026). See [`HACKATHON.md`](HACKATHON.md) for exactly what was built and when.
-
-## Why
-
-Almost everyone who teaches has to prove what they taught — for inspections, accreditation, parents, clients or compliance. Today that means writing it by hand, hours later, from memory, in formats nobody can verify or exchange. School teachers alone spend 30–45 minutes a day on it.
-
-## How it works
-
+```mermaid
+flowchart LR
+  A["photo · voice note · text"] --> B["Record Engine<br/>locate → listen → read → check"]
+  B --> C{"confidence<br/>policy"}
+  C -- sure --> D[signed .tdx record]
+  C -- unsure --> E[educator confirms] --> D
+  C -- nothing readable --> F[held, never invented]
+  D --> G["daily hash chain · Merkle seal"]
+  G --> H["anyone verifies<br/>with public keys"]
 ```
-photo · voice note · text  ──▶  Record Engine (Meta models)  ──▶  .tdx record  ──▶  sign · chain · verify
-   (WhatsApp first)              locate → listen → read → check       (any institution,     (anyone, with
-                                                                       any language)          public keys)
+
+```bash
+git clone https://github.com/sandeepkumareeri/teacherdox-core && cd teacherdox-core
+node bin/tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json   # → VALID
 ```
 
-- **Capture** on the channel educators already use (WhatsApp first). Capture never waits for AI.
-- **Record Engine:** SAM 3.1 finds the board, Muse Voice Transcribe hears the voice note in any language, Muse Spark reads and structures the session, a check step cross-examines the result; every field carries a confidence.
-- **Trust:** canonical JSON (RFC 8785), Ed25519 signatures, per-educator daily hash chains, amendments as new records, daily Merkle seals. Verification needs only public keys.
-- **Global by configuration:** language, institution and country packs.
+No install: Node.js 22+, no runtime dependencies. Five minutes:
+[`docs/quickstart.md`](docs/quickstart.md). One record end to end, with real output:
+[`docs/how-a-record-is-born.md`](docs/how-a-record-is-born.md).
 
-## Repository
+## How well the models do (measured, synthetic data)
+
+12 synthetic board photos and 8 synthetic voice notes, each provider on its own. Full table, per
+case, method and caveats: [`eval/RESULTS.md`](eval/RESULTS.md).
+
+| | Meta Model API | Muse Spark Open (Baseten) | Gemini (`gemini-3.8-flash`) |
+|---|---|---|---|
+| Field accuracy, all 20 cases | **81%** | 69% | 77% |
+| Boards | **98%** | **98%** | 82% (2 of 12 refused with HTTP 429; 98% on the rest) |
+| Voice: en / hi / pt | 90 / 80 / 100% | 90 / 0 / 20% | 100 / 90 / 100% |
+| Voice: Malayalam, Telugu | held (ml not supported; te not heard) | not heard | ml 1 of 2; te held |
+| Time per record, p50 | **9.3 s** | 11.3 s | 16.1 s |
+| Cost per record | not published | $0.0104 | not recorded |
+
+Where Meta was weaker: Malayalam and Telugu voice notes, and the robotic synthetic voices may make
+those numbers worse than real recordings would be. The Meta and Gemini columns come from two runs 44
+minutes apart, because the Meta Model API answered 404 during the Gemini run. Twenty cases is a small
+sample.
+
+## What a record proves
+
+Each locked record is RFC 8785 canonical JSON signed with Ed25519, linked by hash to the
+educator's previous record that day, and can be covered by a signed Merkle root at the end of the day. A
+verifier needs only the record and the institution's published public keys. It can show that the
+record is unchanged since signing, who signed it with which key, and that no record of the day was
+removed or inserted. It cannot show that the lesson happened as written. [`SECURITY.md`](SECURITY.md)
+sets out what can and cannot be forged.
+
+Corrections never edit a signed record: they are new records that point at the old one. Every
+model step is written into the record (provider, model, time, tokens, cost), and fields the models
+were unsure of are confirmed by the educator, never saved silently.
+
+## What is in the repository
 
 | Path | What |
 |---|---|
-| [`spec/00-core-architecture.md`](spec/00-core-architecture.md) | System architecture |
-| [`spec/tdx-2.0.md`](spec/tdx-2.0.md) | The `.tdx` 2.0 universal teaching record |
-| [`spec/schema/tdx-2.0.schema.json`](spec/schema/tdx-2.0.schema.json) | Normative JSON Schema (2020-12) |
-| `src/tdx/` | Reference implementation: canonical form, signing, chain, verification, seals, schema validator |
-| `src/engine/` | Record Engine: capability router, Meta provider (SAM 3.1, Muse Voice Transcribe, Muse Spark), host-supplied fallback, locate → listen → read → check → score |
-| [`packs/`](packs/README.md) | Locale (en, ml, te, hi, pt-BR, id, fr), institution, country (IN, BR, ID, FR, SN) and policy packs |
-| `src/packs/` | Pack loader, `t()` with plurals, field labels per institution, `describe()` for engine results |
-| `src/api/` | REST API `/v1` on `node:http` — capture, lock / confirm / amend, countersign, day seal, proofs, verify, telemetry; durable work queue ([`docs/api.md`](docs/api.md)) |
-| `src/verifier/` | Verification report for any input; a second, WebCrypto-only verifier that runs in the browser |
-| [`verifier/`](verifier/index.html) | Public verifier page (served at `/verify/`), its browser bundle and a synthetic sample day |
+| [`spec/tdx-2.0.md`](spec/tdx-2.0.md), [`spec/schema/`](spec/schema/tdx-2.0.schema.json) | The `.tdx` 2.0 record (RFC style) and its normative JSON Schema |
+| [`spec/vectors/`](spec/vectors/README.md) | Test vectors with a published test key, so other implementations can check themselves |
+| `src/tdx/` | Reference implementation: canonical form, signing, chain, amendments, seals, countersignatures, schema validator. No dependencies, type-checked |
+| `src/engine/` | Record Engine: capability router with fallback, providers (Meta Model API, Baseten, host-supplied), confidence routing |
+| [`packs/`](packs/README.md) | Languages (en, ml, te, hi, pt-BR, id, fr), institution types, countries, policies |
+| `src/api/` | REST API `/v1`: capture, confirm, amend, countersign, seal, verify, telemetry ([`docs/api.md`](docs/api.md)) |
+| [`verifier/`](verifier/index.html) | Verifier page: checks records in the browser with WebCrypto, nothing uploaded |
 | `bin/tdx` | CLI: `verify`, `validate`, `hash`, `keygen`, `process`, `serve` |
-| `test/` | Tests (`npm test`) — Meta API mocked with the shapes in `docs/meta-model-api-notes.md` |
-| `scripts/engine-live.js` | Live run on synthetic evidence (Actions → *Engine live run*, needs `META_API_KEY`) |
-
-## Quick start
+| [`eval/`](eval/RESULTS.md) | Evaluation harness and results |
+| [`docs/meta-model-api-notes.md`](docs/meta-model-api-notes.md) | What was observed calling Meta's models |
 
 ```bash
-npm test
+npm test              # 90 tests, Linux and Windows
+npm run typecheck     # after npm install (dev dependencies only)
+npm run coverage
 ```
 
-```js
-const tdx = require('./src/tdx');
-const key = tdx.generateKey('k_2026_10');
-const draft = tdx.draft({ tenant: 't_demo', actor: { educator_ref: 'e_1', institution_ref: 'i_1', institution_type: 'university' },
-  session: { kind: 'lecture', date: '2026-10-28', timezone: 'America/Sao_Paulo', course: 'CS201', subject: 'Data Structures' } });
-const record = tdx.lock(draft, { key });
-tdx.verifyCapsule(record, { keys: [key.publicEntry] });   // → { ok: true, ... }
-```
+CI runs all three plus CodeQL on every push. Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Changes: [`CHANGELOG.md`](CHANGELOG.md). Built during the Meta Global AI Developer Hackathon
+(26 Oct – 4 Nov 2026); [`HACKATHON.md`](HACKATHON.md) logs what was built and when.
 
-### Record Engine
+## Using it from code
 
 ```js
 const { createRecordEngine, fromGenerate } = require('./src/engine');
-const engine = createRecordEngine({
-  fallback: fromGenerate(myGeminiGenerate),        // optional; the core never calls Google itself
-  dailyLimit: { meta: 500 },                       // a bug cannot burn the credits
+const tdx = require('./src/tdx');
+
+const engine = createRecordEngine({ fallback: fromGenerate(hostGenerate), dailyLimit: { meta: 500 } });
+const { capsule, routing } = await engine.process({
+  evidence: [{ bytes: boardJpeg, media_type: 'image/jpeg' }],
+  context: { tenant: 't_1', educator_ref: 'e_1', institution_ref: 'i_1', institution_type: 'school',
+             country: 'IN', locale: 'en-IN', date: '2026-10-28', channel: 'whatsapp' },
 });
-const { capsule, routing, transcripts } = await engine.process({
-  evidence: [{ bytes: boardJpeg, media_type: 'image/jpeg' }, { bytes: voiceOgg, media_type: 'audio/ogg' }],
-  text: 'P2',
-  context: { tenant: 't_demo', educator_ref: 'e_1', institution_ref: 'i_1', institution_type: 'school',
-    locale: 'te-IN', record_locale: 'en', country: 'IN', timezone: 'Asia/Kolkata', date: '2026-10-28',
-    channel: 'whatsapp', session: { label: 'P2' }, allow_providers: ['meta', 'gemini'] },
-});
-// capsule: a valid draft .tdx 2.0 record (hashes only, no bytes or transcripts), with
-//          per-step provenance: provider, model, status, ms, tokens, cost
-// routing: { decision: 'auto_lock' | 'confirm' | 'hold', confirm_fields, reasons, ... }
+// routing.decision: 'auto_lock' | 'confirm' | 'hold'
+const record = tdx.lock(capsule, { key, state: 'auto_locked' });
+tdx.verifyCapsule(record, { keys: [publicEntry] });   // → { ok: true, hash, errors: [] }
 ```
 
-| Step | Capability | Meta model | Without it |
-|---|---|---|---|
-| locate | `segment` | SAM 3.1 — finds the board; ffmpeg crops to it | whole photo is read |
-| listen | `transcribe` | Muse Voice Transcribe — OGG/Opus → 16 kHz WAV via ffmpeg | fallback provider (always for Malayalam, which Meta does not support) |
-| read | `structure` | Muse Spark, strict JSON schema, per-field confidence | fallback provider |
-| check | `check` | Muse Spark, second pass: each field supported / unsupported / contradicted | record cannot be auto-locked |
-| score | — | field classes (critical / material / soft) × policy | — |
-
-Institution, country and policy packs shape every run: the vocabulary the model is given, which fields are critical (a university's course, a school's class), the time zone and record language when the channel does not send them, the confidence thresholds, and how late a capture may be. `packs.describe(result)` turns the outcome into one sentence in the educator's language (e.g. Malayalam: "രേഖപ്പെടുത്തി. ഒപ്പിടാൻ തയ്യാർ.").
-
-Providers are tried in order and skipped when they lack the capability, cannot take the input, are not allowed for this educator (`allow_providers`, for consent) or have hit their daily limit; errors and timeouts fall through. If nothing usable was read or heard, no model is asked to invent a record — the draft is held.
-
-### API, verifier and CLI
-
-```bash
-tdx keygen k_2026_10                                   # signing key (keys/ is git-ignored)
-TDX_API_TOKENS=tok:t_demo TDX_SIGNING_KEY_FILE=keys/k_2026_10.pem TDX_SIGNING_KEY_ID=k_2026_10 \
-  TDX_KEY_REGISTRY=keys/k_2026_10.public.json TDX_DATA_DIR=data META_API_KEY=… tdx serve
-tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json   # → VALID
-```
-
-The record lifecycle over HTTP: `POST /v1/records` (capture; returns at once, the engine runs in the background) → `lock` (only if the policy allows auto-lock) or `confirm` (the educator, optionally with corrections) → `amend` (a correction is a new signed record) → `countersign` (an approver) → `POST /v1/days/…/seal` → `GET /v1/days/…` (the exportable day). See [`docs/api.md`](docs/api.md).
-
-**Capture never waits for AI.** Capture writes the evidence and a job and returns; workers run the engine. Jobs are files, so a restart re-runs unfinished work without ever making a record twice (each job carries its entry id), transient model outages are retried with backoff, and a full queue answers `503 Retry-After` instead of slowing everyone down. `GET /v1/telemetry` reports cost, latency, fallback rate and routing outcomes per step, provider and model — computed from the provenance each record already carries.
-
-**Verification never needs our servers.** The verifier page at `/verify/` checks signatures, the day's hash chain, the Merkle seal and countersignatures in the browser with WebCrypto — a second implementation, independent of the reference one, and the tests require both to give identical reports. The same check runs from the command line (`tdx verify`) or as a library.
+`hostGenerate` is any function that takes a Gemini `generateContent` request and returns its response.
+The core never calls Google itself; `hosts/gemini.js` is the one this repository's scripts use.
 
 ## License
 
-Apache-2.0 (see `LICENSE` and `NOTICE`: TeacherDox Core — Copyright 2026 TeacherDox Private Limited). The `.tdx` format is open so that institutions, ministries and software vendors can read, store and verify teaching records without depending on TeacherDox.
-
-TeacherDox Private Limited · teacherdox.com
+Apache-2.0 (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE): TeacherDox Core — Copyright 2026
+TeacherDox Private Limited). The `.tdx` format is open so that institutions, ministries and software
+vendors can read, store and verify teaching records without depending on TeacherDox.
