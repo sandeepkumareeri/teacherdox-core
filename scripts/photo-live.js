@@ -82,6 +82,10 @@ async function run(config) {
   const schema = tdx.validateCapsule(r.capsule);
   notice(`[${config}] ` + `Draft capsule valid against schema: ${schema.ok}`, `${r.capsule.capsule_id} · total ${total} ms`);
   fs.writeFileSync(path.join(OUT_C, 'capsule-draft.json'), JSON.stringify(r.capsule, null, 2));
+  // Also in the log (the artifact needs a GitHub login; the log is public): synthetic data, throwaway key.
+  const dump = (title, obj) => { console.log(`::group::${title}`); console.log(JSON.stringify(obj, null, 2)); console.log('::endgroup::'); };
+  dump(`[${config}] draft capsule`, r.capsule);
+  if (signed) { dump(`[${config}] signed capsule`, signed); dump(`[${config}] key registry (throwaway public key)`, registry); }
 
   const summary = [
     `## Photo pipeline — ${config === 'meta' ? 'Meta Model API (SAM 3.1 + Muse Spark)' : 'SAM 3.1 (Meta Model API) + Muse Spark Open on Baseten'} — live run (synthetic board)`, '',
