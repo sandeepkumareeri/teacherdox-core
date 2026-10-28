@@ -24,7 +24,7 @@ The private product's hackathon brief is `docs/meta-hackathon.md` in the `teache
 npm test        # node --test test/*.test.js — no dependencies needed
 ```
 
-Node ≥ 20, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
+Node ≥ 22, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
 ## Status (28 Oct 2026)
 
