@@ -107,6 +107,6 @@ The record lifecycle over HTTP: `POST /v1/records` (capture; returns at once, th
 
 ## License
 
-Apache-2.0. The `.tdx` format is open so that institutions, ministries and software vendors can read, store and verify teaching records without depending on TeacherDox.
+Apache-2.0 (see `LICENSE` and `NOTICE`: TeacherDox Core — Copyright 2026 TeacherDox Private Limited). The `.tdx` format is open so that institutions, ministries and software vendors can read, store and verify teaching records without depending on TeacherDox.
 
 TeacherDox Private Limited · teacherdox.com
