@@ -1,0 +1,165 @@
+{
+  "format": "tdx",
+  "spec_version": "2.0.0",
+  "capsule_id": "01a1820a-8d5d-7039-9549-deea829659b8",
+  "body": {
+    "tenant": "t_demo",
+    "actor": {
+      "educator_ref": "e_demo",
+      "institution_ref": "i_demo",
+      "institution_type": "school"
+    },
+    "locale": "en-IN",
+    "record_locale": "en",
+    "country": "IN",
+    "session": {
+      "kind": "period",
+      "date": "2026-10-28",
+      "timezone": "Asia/Kolkata",
+      "label": null,
+      "cohort": "8B",
+      "subject": "Mathematics",
+      "course": null,
+      "unit": "Fractions"
+    },
+    "source": {
+      "channel": "api",
+      "capture_methods": [
+        "photo"
+      ],
+      "captured_at": "2026-10-28T10:24:52.060Z"
+    },
+    "evidence": [
+      {
+        "id": "sha256:462bd34b25763047a8c3d2abd60bef95913af70c0500f4522e38b91de6c7300b",
+        "media_type": "image/jpeg",
+        "bytes": 57499,
+        "role": "board"
+      }
+    ],
+    "evidence_findings": [
+      {
+        "evidence": "sha256:462bd34b25763047a8c3d2abd60bef95913af70c0500f4522e38b91de6c7300b",
+        "step": "locate",
+        "finding": "board_region",
+        "box": [
+          0.1117,
+          0.1292,
+          0.8883,
+          0.7875
+        ]
+      }
+    ],
+    "content": {
+      "title": "Adding fractions with unlike denominators",
+      "topics": [
+        "Common denominators",
+        "LCM",
+        "Addition of unlike fractions"
+      ],
+      "summary": "Taught how to add fractions with different denominators by making denominators the same using LCM, solving 1/2 + 1/3 = 5/6 and 3/4 + 1/6 = 11/12.",
+      "method": "Board explanation with worked examples",
+      "assignments": [
+        {
+          "text": "Ex 3.2 Q1-5",
+          "due": null
+        }
+      ],
+      "next": null,
+      "materials": [],
+      "notes": null
+    },
+    "curriculum": {
+      "framework": null,
+      "tags": []
+    },
+    "provenance": {
+      "pipeline_version": "core-0.2",
+      "steps": [
+        {
+          "step": "locate",
+          "capability": "segment",
+          "provider": "meta",
+          "model": "sam-3.1",
+          "status": "ok",
+          "ms": 1496,
+          "cost_usd": null,
+          "tokens": null,
+          "evidence": "sha256:462bd34b25763047a8c3d2abd60bef95913af70c0500f4522e38b91de6c7300b"
+        },
+        {
+          "step": "read",
+          "capability": "structure",
+          "provider": "meta",
+          "model": "muse-spark-1.3",
+          "status": "ok",
+          "ms": 8552,
+          "cost_usd": null,
+          "tokens": {
+            "input": 1274,
+            "output": 1513
+          }
+        },
+        {
+          "step": "check",
+          "capability": "check",
+          "provider": "meta",
+          "model": "muse-spark-1.3",
+          "status": "ok",
+          "ms": 5542,
+          "cost_usd": null,
+          "tokens": {
+            "input": 1215,
+            "output": 1122
+          }
+        }
+      ],
+      "fallback_used": false,
+      "overall_confidence": 0.847,
+      "field_confidence": {
+        "session.cohort": 1,
+        "session.subject": 0.5,
+        "session.unit": 1,
+        "content.title": 0.8,
+        "content.topics": 0.9,
+        "content.summary": 0.9,
+        "content.method": 0.7,
+        "content.assignments": 1
+      },
+      "flags": [
+        {
+          "field": "session.subject",
+          "issue": "unsupported",
+          "detail": "Board shows Fractions only, not word Mathematics."
+        }
+      ],
+      "routing": {
+        "decision": "confirm",
+        "policy_profile": "school_compliance",
+        "policy_version": "1",
+        "auto_accepted_fields": [
+          "session.cohort",
+          "session.unit",
+          "content.assignments",
+          "content.topics",
+          "content.title",
+          "content.summary",
+          "content.method"
+        ],
+        "confirm_fields": [
+          "session.subject"
+        ],
+        "reasons": [
+          "session.subject confidence 0.50 < 0.9 (critical)"
+        ]
+      }
+    },
+    "amendment": null,
+    "ext": {},
+    "entry_id": "01a1820a-8d5d-7795-9ddb-a8d5fe8196fa",
+    "lifecycle": {
+      "state": "draft"
+    },
+    "chain": null
+  }
+}

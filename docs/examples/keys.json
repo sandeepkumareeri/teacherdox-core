@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "kid": "tdx-test-2026",
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "d8RKqQWuFCUmGvec42Du06sI5XI3nHzcuwOr8ZVUVgg",
+      "alg": "ed25519",
+      "valid_from": "2026-01-01T00:00:00Z",
+      "valid_to": null,
+      "revoked_at": null
+    }
+  ]
+}

@@ -135,3 +135,21 @@ test('CLI: tdx verify exits 0 for valid, 1 for altered; validate and hash work',
   // POSIX only: Windows has no group/other mode bits (Node reports 0o666); see SECURITY.md for key files there.
   if (process.platform !== 'win32') assert.equal(fs.statSync(path.join(dir, 'keys', 'k_cli_test.pem')).mode & 0o077, 0);
 });
+
+test('docs example: the live draft confirms, signs and verifies exactly as docs/how-a-record-is-born.md shows', () => {
+  const ex = p => path.join(__dirname, '..', 'docs', 'examples', p);
+  const read = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+  const draft = read(ex('live-draft.json')), signed = read(ex('live-signed.json')), keys = read(ex('keys.json')), seal = read(ex('live-seal.json'));
+  assert.ok(tdx.validateCapsule(draft).ok);
+  // the evidence hash in the live record is the synthetic board in this repository
+  assert.equal(draft.body.evidence[0].id, tdx.sha256(fs.readFileSync(path.join(__dirname, 'fixtures', 'board-synthetic.jpg'))));
+  // signed with the published test key, so anyone can reproduce it
+  assert.deepEqual(keys.keys[0], read(path.join(__dirname, '..', 'spec', 'vectors', 'keys.json')).public_key);
+  const v = tdx.verifyCapsule(signed, keys);
+  assert.ok(v.ok, v.errors.join('; '));
+  assert.equal(v.hash, 'sha256:f49d8b51e3d42225b07ae256b4fd0aa62c8958a9bfb6abc9bb17c333eee626ac');
+  assert.ok(tdx.verifySeal(seal, keys, [v.hash]).ok);
+  // locking changed nothing the models produced: only lifecycle, attestation and chain
+  const strip = b => ({ ...b, lifecycle: null, attestation: null, chain: null });
+  assert.deepEqual(strip(signed.body), strip(draft.body));
+});

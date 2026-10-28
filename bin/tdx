@@ -34,7 +34,7 @@ function parse(argv) {
   }
   return { pos, opt };
 }
-const readJson = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+const readJson = f => JSON.parse(fs.readFileSync(f, 'utf8').replace(/^\uFEFF/, ''));   // tolerate a BOM (Windows PowerShell 5 writes one)
 const die = (msg, code = 2) => { console.error(msg); process.exit(code); };
 const list = v => (v === undefined ? [] : [].concat(v));
 

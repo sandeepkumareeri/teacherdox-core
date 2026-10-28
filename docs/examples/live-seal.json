@@ -1,0 +1,12 @@
+{
+  "type": "tdx-day-seal",
+  "scope": "t_demo|e_demo|2026-10-28",
+  "count": 1,
+  "merkle_root": "bf9b6f11c22f87f08cf2df01e53164bfa16128983fec759195d5971023c3eab4",
+  "sealed_at": "2026-10-28T14:30:00Z",
+  "signature": {
+    "alg": "ed25519",
+    "key_id": "tdx-test-2026",
+    "sig": "XUUlQKuKGi31P1l3TNZgtP4w5D86Nq9qntJ9PdXAOoqF_wIQZRm7ivrn9vQVRTEURG-nJGfFXY9E7YBlE8IHDw"
+  }
+}
