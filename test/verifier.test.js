@@ -132,5 +132,6 @@ test('CLI: tdx verify exits 0 for valid, 1 for altered; validate and hash work',
   const kg = spawnSync(process.execPath, [TDX, 'keygen', 'k_cli_test', '--out', path.join(dir, 'keys')], { encoding: 'utf8' });
   assert.equal(kg.status, 0, kg.stderr);
   assert.equal(JSON.parse(kg.stdout).kid, 'k_cli_test');
-  assert.equal(fs.statSync(path.join(dir, 'keys', 'k_cli_test.pem')).mode & 0o077, 0);
+  // POSIX only: Windows has no group/other mode bits (Node reports 0o666); see SECURITY.md for key files there.
+  if (process.platform !== 'win32') assert.equal(fs.statSync(path.join(dir, 'keys', 'k_cli_test.pem')).mode & 0o077, 0);
 });
