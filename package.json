@@ -1,6 +1,6 @@
 {
   "name": "teacherdox-core",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Teaching documentation infrastructure for the world: the open .tdx record, a multimodal record engine on Meta's models, and verifiable trust.",
   "license": "Apache-2.0",
   "main": "src/tdx/index.js",
@@ -16,8 +16,7 @@
     "coverage": "node --test --experimental-test-coverage test/*.test.js",
     "serve": "node bin/tdx serve",
     "build:verifier": "node -e \"require('fs').writeFileSync('verifier/tdx-verify.js', require('./src/verifier').buildBrowserBundle())\"",
-    "build:sample": "node scripts/make-sample.js",
-    "eval": "node eval/run.js"
+    "build:sample": "node scripts/make-sample.js"
   },
   "repository": {
     "type": "git",
@@ -33,29 +32,6 @@
     "meta",
     "muse"
   ],
-  "dependencies": {
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.56.0",
-    "@opentelemetry/exporter-prometheus": "^0.56.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.56.0",
-    "@opentelemetry/instrumentation": "^0.56.0",
-    "@opentelemetry/instrumentation-express": "^0.56.0",
-    "@opentelemetry/instrumentation-grpc": "^0.56.0",
-    "@opentelemetry/instrumentation-http": "^0.56.0",
-    "@opentelemetry/instrumentation-pg": "^0.56.0",
-    "@opentelemetry/instrumentation-redis": "^0.56.0",
-    "@opentelemetry/instrumentation-winston": "^0.56.0",
-    "@opentelemetry/resources": "^1.28.0",
-    "@opentelemetry/sdk-metrics": "^1.28.0",
-    "@opentelemetry/sdk-trace-base": "^1.28.0",
-    "@opentelemetry/sdk-trace-node": "^1.28.0",
-    "@opentelemetry/semantic-conventions": "^1.28.0",
-    "@supabase/supabase-js": "^2.45.0",
-    "dotenv": "^16.4.5",
-    "sharp": "^0.33.5",
-    "uuid": "^10.0.0",
-    "winston": "^3.17.0"
-  },
   "devDependencies": {
     "@types/node": "26.1.2",
     "typescript": "6.0.2"
