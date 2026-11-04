@@ -9,7 +9,8 @@ educators, in any country and language.
 
 | Step | What happens | Model |
 |---|---|---|
-| locate | find the board in the photo and crop to it | **SAM 3.1** (Meta Model API) |
+| capture | after the class, the educator snaps the board and records a voice note on WhatsApp | — |
+| locate | trim the board photo to the writing: the frame, wall, desks and glare around it are cut away | **SAM 3.1** (Meta Model API) |
 | listen | transcribe the voice note, in the educator's language | **Muse Voice Transcribe** (Meta Model API) |
 | read | turn crop, transcript and text into structured fields, each with a confidence | **Muse Spark** (Meta Model API) |
 | check | a second call checks every field against the evidence | **Muse Spark** (Meta Model API) |
