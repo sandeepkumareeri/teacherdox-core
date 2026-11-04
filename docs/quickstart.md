@@ -101,7 +101,7 @@ echo '{"tenant":"t_demo","educator_ref":"e_demo","institution_ref":"i_demo","ins
 node bin/tdx process --image test/fixtures/board-synthetic.jpg --context context.json
 ```
 
-SAM 3.1 finds the board, Muse Spark reads it and a second Muse Spark call checks the reading against
+SAM 3.1 cuts the photo down to the board, Muse Spark reads the board and writes the entry, and a second Muse Spark call checks the reading against
 the photo. You get a draft `.tdx` record with a confidence for each field and the routing decision
 (`auto_lock`, `confirm` or `hold`). [`how-a-record-is-born.md`](how-a-record-is-born.md) walks
 through a real run step by step. If `ffmpeg` is installed, the board is cropped before reading;

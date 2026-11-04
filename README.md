@@ -7,12 +7,15 @@ educator's signature makes it a record that anyone can verify. Live in India; th
 record works for schools, colleges, universities, academies, training centres and independent
 educators, in any country and language.
 
+Educators already write the lesson on the board — then wipe it off and copy the same lesson into
+the teaching diary by hand. **TeacherDox reads the board and writes the diary.**
+
 | Step | What happens | Model |
 |---|---|---|
 | capture | after the class, the educator snaps the board and records a voice note on WhatsApp | — |
-| locate | trim the board photo to the writing: the frame, wall, desks and glare around it are cut away | **SAM 3.1** (Meta Model API) |
+| locate | cut the photo down to the board, so only the writing is read (the wall, desks and glare around it are cut away) | **SAM 3.1** (Meta Model API) |
 | listen | transcribe the voice note, in the educator's language | **Muse Voice Transcribe** (Meta Model API) |
-| read | turn crop, transcript and text into structured fields, each with a confidence | **Muse Spark** (Meta Model API) |
+| read | **read the board** (and the voice note and any text) and write the diary entry: class, subject, topic, summary, homework, each with a confidence | **Muse Spark** (Meta Model API) |
 | check | a second call checks every field against the evidence | **Muse Spark** (Meta Model API) |
 | read, check (second provider) | the same steps on Meta's open weights | **Muse Spark Open** on Baseten |
 | fallback | whatever the Meta models cannot do (e.g. Malayalam speech) | a model the host plugs in (e.g. Gemini) |

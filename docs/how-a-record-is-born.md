@@ -44,7 +44,7 @@ hash**, so whoever holds the file can prove it is the same one.
 Check it yourself: `sha256sum test/fixtures/board-synthetic.jpg` (PowerShell:
 `Get-FileHash test/fixtures/board-synthetic.jpg`) prints the same hash.
 
-## 2. Locate: SAM 3.1 finds the board (1.5 s)
+## 2. Locate: SAM 3.1 cuts the photo down to the board (1.5 s)
 
 Meta's segmentation model is asked for the chalkboard or whiteboard. It returned the box
 `[0.1117, 0.1292, 0.8883, 0.7875]` (fractions of the width and height). The board drawn in the
