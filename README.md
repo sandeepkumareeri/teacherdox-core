@@ -31,18 +31,27 @@ flowchart LR
   G --> H["anyone verifies<br/>with public keys"]
 ```
 
+## Try it
+
+**Check a signed teaching diary yourself (1 minute).** You need only Node.js 22 or newer — nothing
+to install, no accounts:
+
 ```bash
 git clone https://github.com/sandeepkumareeri/teacherdox-core && cd teacherdox-core
 node bin/tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json   # → VALID
 ```
 
-**On WhatsApp:** point a WhatsApp Cloud API number at `/v1/whatsapp/webhook` and educators send a
-board photo and a voice note; they get back the record and a **Sign** button
-([`docs/whatsapp.md`](docs/whatsapp.md)).
+This checks a sample day of signed records: each one is unchanged since it was signed, signed by
+the right key, and none of the day's records is missing.
 
-No install: Node.js 22+, no runtime dependencies. Five minutes:
-[`docs/quickstart.md`](docs/quickstart.md). One record end to end, with real output:
-[`docs/how-a-record-is-born.md`](docs/how-a-record-is-born.md).
+**Run it on WhatsApp.** Connect a WhatsApp Business number (Meta's WhatsApp Cloud API) to
+TeacherDox Core. An educator sends the number a photo of the board and a voice note; WhatsApp
+replies with the diary entry and a **Sign** button. Setup: [`docs/whatsapp.md`](docs/whatsapp.md).
+
+**Learn more.**
+- [`docs/quickstart.md`](docs/quickstart.md) — make and sign your first record (5 minutes).
+- [`docs/how-a-record-is-born.md`](docs/how-a-record-is-born.md) — a (synthetic) board photo becoming a
+  signed record on Meta's models, step by step, with the output of a live run.
 
 ## How well the models do (measured, synthetic data)
 
