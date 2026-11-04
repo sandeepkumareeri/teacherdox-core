@@ -26,7 +26,11 @@ npm test        # node --test test/*.test.js — no dependencies needed
 
 Node ≥ 22, plain CommonJS, **no runtime dependencies so far** — keep `src/tdx` dependency-free.
 
-## Status (28 Oct 2026)
+## Status (4 Nov 2026)
+
+Submission day. The tree equals v0.1.0 plus docs: the 3 Nov observability / tenancy / language-router
+additions were reverted on 4 Nov (keep `src/` free of runtime dependencies). Product integration lives
+in the private repo (`engine.js`, `router.js`, `muse.js`). As of 28 Oct:
 
 Built on branch `claude/exciting-faraday-exxt9l` (ahead of the plan below; gaps against the quality
 bar are listed under "Missing"):

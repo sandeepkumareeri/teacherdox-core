@@ -109,6 +109,20 @@ tdx.verifyCapsule(record, { keys: [publicEntry] });   // → { ok: true, hash, e
 `hostGenerate` is any function that takes a Gemini `generateContent` request and returns its response.
 The core never calls Google itself; `hosts/gemini.js` is the one this repository's scripts use.
 
+## Meta Global AI Developer Hackathon
+
+Startup track, theme *Build for Your World*.
+
+- **Built before the hackathon (not part of this submission):** the TeacherDox WhatsApp product
+  (private repository, live at [app.teacherdox.in](https://app.teacherdox.in)) and the `.tdx` 1.0
+  design documents.
+- **Built during the hackathon (26 Oct – 4 Nov 2026):** everything in this repository: the `.tdx` 2.0
+  spec and vectors, the trust layer, the Record Engine on Meta's models, packs, API, verifier, CLI and
+  eval. Every commit is dated; [`HACKATHON.md`](HACKATHON.md) lists the work day by day.
+- **In the product:** the Meta models sit behind the product's single model boundary, Meta first and
+  Gemini as fallback, for allow-listed demo and consenting numbers only (free-credit content may be
+  used by Meta for product improvement, so real teachers stay on the existing backend).
+
 ## License
 
 Apache-2.0 (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE): TeacherDox Core — Copyright 2026
