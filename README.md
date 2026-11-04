@@ -1,5 +1,7 @@
 # TeacherDox Core
 
+**▶ [Watch the 3-minute demo](https://www.youtube.com/watch?v=BRQtIwP1mf4)** · Meta Global AI Developer Hackathon, Startup track
+
 **WhatsApp-first teaching records infrastructure** for everyone who teaches and keeps a teaching
 diary: school teachers, college lecturers, professors, tutors and trainers. An educator sends a
 board photo and a voice note on WhatsApp; Meta's models turn it into a structured entry; the
