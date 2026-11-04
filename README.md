@@ -1,9 +1,11 @@
 # TeacherDox Core
 
-**WhatsApp-first teaching records infrastructure.** A teacher sends a board photo and a voice note
-on WhatsApp; Meta's models turn it into a structured entry; the teacher's signature makes it a
-record that anyone can verify. Live in India; the open `.tdx` record works for any educator,
-institution, country and language.
+**WhatsApp-first teaching records infrastructure** for everyone who teaches and keeps a teaching
+diary: school teachers, college lecturers, professors, tutors and trainers. An educator sends a
+board photo and a voice note on WhatsApp; Meta's models turn it into a structured entry; the
+educator's signature makes it a record that anyone can verify. Live in India; the open `.tdx`
+record works for schools, colleges, universities, academies, training centres and independent
+educators, in any country and language.
 
 | Step | What happens | Model |
 |---|---|---|
@@ -123,7 +125,7 @@ Startup track, theme *Build for Your World*.
   eval. Every commit is dated; [`HACKATHON.md`](HACKATHON.md) lists the work day by day.
 - **In the product:** the Meta models sit behind the product's single model boundary, Meta first and
   Gemini as fallback, for allow-listed demo and consenting numbers only (free-credit content may be
-  used by Meta for product improvement, so real teachers stay on the existing backend).
+  used by Meta for product improvement, so real educators stay on the existing backend).
 
 ## License
 
