@@ -4,7 +4,7 @@ Guidance for Claude Code in this repository.
 
 ## What this is
 
-**TeacherDox Core — teaching documentation infrastructure for the world.** The infrastructure layer
+**TeacherDox Core — WhatsApp-first teaching records infrastructure for everyone who teaches.** The infrastructure layer
 behind the TeacherDox WhatsApp product (private repo `sandeepkumareeri/teacherdox`): the open `.tdx`
 2.0 teaching record, a multimodal Record Engine on Meta's models, a verifiable trust layer, packs
 (locale / institution / country / policy) and a REST API. Any educator (school teacher, lecturer,
@@ -30,7 +30,8 @@ Node ≥ 22, plain CommonJS, **no runtime dependencies so far** — keep `src/td
 
 Submission day. The tree equals v0.1.0 plus docs: the 3 Nov observability / tenancy / language-router
 additions were reverted on 4 Nov (keep `src/` free of runtime dependencies). Product integration lives
-in the private repo (`engine.js`, `router.js`, `muse.js`). As of 28 Oct:
+in the private repo (`engine.js`, `router.js`, `muse.js`). 4 Nov night: WhatsApp Cloud API channel
+`src/channels/whatsapp/` + `/v1/whatsapp/webhook` (`docs/whatsapp.md`), 98 tests. As of 28 Oct:
 
 Built on branch `claude/exciting-faraday-exxt9l` (ahead of the plan below; gaps against the quality
 bar are listed under "Missing"):

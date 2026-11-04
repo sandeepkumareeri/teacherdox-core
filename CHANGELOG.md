@@ -3,6 +3,19 @@
 All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
 the `.tdx` format has its own version (`spec_version`, currently 2.0.0).
 
+## [Unreleased]
+
+### WhatsApp channel
+- `src/channels/whatsapp/`: WhatsApp Cloud API channel with no dependencies. Webhook signature check
+  (`X-Hub-Signature-256`), verification handshake, webhook parsing (photos, voice notes, image/audio
+  documents, text, reply buttons, delivery statuses), Graph API client (media download, text, reply
+  buttons). An educator's messages are grouped into one capture after a quiet period, run through the
+  Record Engine and answered with the locale pack's sentence; a "Sign" tap (or "sign") locks the draft
+  as `confirmed_locked` with `confirmation.channel: "whatsapp"`. The phone number never enters a
+  record (`educator_ref` is a keyed hash).
+- API: `GET`/`POST /v1/whatsapp/webhook`; `tdx serve` switches the channel on from `WHATSAPP_*` and
+  `TDX_WHATSAPP_*` settings. Docs: `docs/whatsapp.md`. 8 tests (98 in total).
+
 ## [0.1.0] — 2026-10-28
 
 First public release, built during the Meta Global AI Developer Hackathon (see `HACKATHON.md` for the

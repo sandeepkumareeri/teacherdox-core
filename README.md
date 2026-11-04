@@ -32,6 +32,10 @@ git clone https://github.com/sandeepkumareeri/teacherdox-core && cd teacherdox-c
 node bin/tdx verify verifier/samples/day-demo.json --keys verifier/samples/keys-demo.json   # → VALID
 ```
 
+**On WhatsApp:** point a WhatsApp Cloud API number at `/v1/whatsapp/webhook` and educators send a
+board photo and a voice note; they get back the record and a **Sign** button
+([`docs/whatsapp.md`](docs/whatsapp.md)).
+
 No install: Node.js 22+, no runtime dependencies. Five minutes:
 [`docs/quickstart.md`](docs/quickstart.md). One record end to end, with real output:
 [`docs/how-a-record-is-born.md`](docs/how-a-record-is-born.md).
@@ -77,14 +81,15 @@ were unsure of are confirmed by the educator, never saved silently.
 | `src/tdx/` | Reference implementation: canonical form, signing, chain, amendments, seals, countersignatures, schema validator. No dependencies, type-checked |
 | `src/engine/` | Record Engine: capability router with fallback, providers (Meta Model API, Baseten, host-supplied), confidence routing |
 | [`packs/`](packs/README.md) | Languages (en, ml, te, hi, pt-BR, id, fr), institution types, countries, policies |
-| `src/api/` | REST API `/v1`: capture, confirm, amend, countersign, seal, verify, telemetry ([`docs/api.md`](docs/api.md)) |
+| [`src/channels/whatsapp/`](docs/whatsapp.md) | **WhatsApp channel** (Cloud API, no dependencies): signed webhooks → one capture per educator → Record Engine → reply; a "Sign" tap signs the record. The phone number never enters a record |
+| `src/api/` | REST API `/v1`: capture, confirm, amend, countersign, seal, verify, telemetry, WhatsApp webhook ([`docs/api.md`](docs/api.md)) |
 | [`verifier/`](verifier/index.html) | Verifier page: checks records in the browser with WebCrypto, nothing uploaded |
 | `bin/tdx` | CLI: `verify`, `validate`, `hash`, `keygen`, `process`, `serve` |
 | [`eval/`](eval/RESULTS.md) | Evaluation harness and results |
 | [`docs/meta-model-api-notes.md`](docs/meta-model-api-notes.md) | What was observed calling Meta's models |
 
 ```bash
-npm test              # 90 tests, Linux and Windows
+npm test              # 98 tests, Linux and Windows
 npm run typecheck     # after npm install (dev dependencies only)
 npm run coverage
 ```

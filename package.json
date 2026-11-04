@@ -1,7 +1,7 @@
 {
   "name": "teacherdox-core",
   "version": "0.1.0",
-  "description": "Teaching documentation infrastructure for the world: the open .tdx record, a multimodal record engine on Meta's models, and verifiable trust.",
+  "description": "WhatsApp-first teaching records infrastructure for everyone who teaches: the open .tdx record, a multimodal Record Engine on Meta's models, a WhatsApp Cloud API channel, and verifiable trust.",
   "license": "Apache-2.0",
   "main": "src/tdx/index.js",
   "bin": {

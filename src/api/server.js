@@ -21,6 +21,8 @@
 //   POST /v1/verify                           verify anything (public)
 //   GET  /v1/keys, /.well-known/tdx-keys.json  published key registry
 //   GET  /verify                              public verifier page (verifies in the browser)
+//   GET  /v1/whatsapp/webhook                 Meta's webhook verification handshake (when WhatsApp is configured)
+//   POST /v1/whatsapp/webhook                 WhatsApp Cloud API messages → records (signature-checked; see docs/whatsapp.md)
 
 const http = require('node:http');
 const crypto = require('node:crypto');
@@ -31,6 +33,7 @@ const packs = require('../packs');
 const { verify, buildBrowserBundle } = require('../verifier');
 const { createQueue } = require('./queue');
 const { telemetry } = require('./telemetry');
+const whatsappChannel = require('../channels/whatsapp');
 
 const MAX_BODY = 30 * 1024 * 1024;
 const MAX_EVIDENCE = 10;
@@ -47,13 +50,15 @@ class HttpError extends Error {
 }
 
 /**
- * createApi({ engine, store, key, registry, tokens, workers, maxQueue, retries, backoffMs, log })
+ * createApi({ engine, store, key, registry, tokens, workers, maxQueue, retries, backoffMs, log, whatsapp })
  *   engine:   from createRecordEngine (needed only for POST /v1/records)
  *   key:      { keyId, privateKeyPem } — the custodial signing key
  *   registry: { keys: [...] } — published; must contain key's public entry
  *   tokens:   { [token]: { tenant } }
+ *   whatsapp: optional WhatsApp Cloud API channel — { client, appSecret, verifyToken, tenant, institution_ref,
+ *             institution_type, country, locale, quietMs, refSecret, verifyUrl, allowUnsigned } (docs/whatsapp.md)
  */
-function createApi({ engine, store, key, registry, tokens = {}, workers = 2, maxQueue = 1000, retries = 2, backoffMs, log = () => {} }) {
+function createApi({ engine, store, key, registry, tokens = {}, workers = 2, maxQueue = 1000, retries = 2, backoffMs, log = () => {}, whatsapp = null }) {
   if (!store || !key || !registry) throw new Error('createApi: store, key and registry are required');
   const tokenHashes = Object.entries(tokens).map(([t, v]) => [crypto.createHash('sha256').update(t).digest(), v]);
   let bundle = null;
@@ -112,6 +117,22 @@ function createApi({ engine, store, key, registry, tokens = {}, workers = 2, max
     const { input, tenant, auto_lock, volatile, ...rest } = j;
     return { ...rest, ...(volatile ? { transcripts: volatile.transcripts } : {}) };
   };
+
+  /** Store the evidence and queue a capture; the job's id and entry id are assigned up front. */
+  function enqueue(tenant, input, autoLock) {
+    if (!queue) throw new HttpError(503, 'no record engine configured');
+    const evidence = input.evidence.map(e => {
+      const id = tdx.sha256(e.bytes);
+      store.putEvidence(id, e.bytes, e.media_type);
+      return { id, media_type: e.media_type, ...(e.role ? { role: String(e.role) } : {}) };
+    });
+    const job = { id: tdx.uuidv7(), entry_id: tdx.uuidv7(), tenant, auto_lock: autoLock, input: { evidence, text: input.text, context: input.context } };
+    try { queue.submit(job); } catch (e) {
+      if (e.code === 'QUEUE_FULL') throw new HttpError(503, 'the processing queue is full; try again shortly', { retry_after_s: 30 });
+      throw e;
+    }
+    return job;
+  }
 
   // ── record helpers ──────────────────────────────────────────────────────────────
   function entryCapsules(tenant, entryId) {
@@ -178,18 +199,7 @@ function createApi({ engine, store, key, registry, tokens = {}, workers = 2, max
     }],
 
     ['POST', /^\/v1\/records$/, true, async ({ body, tenant, query }) => {
-      if (!queue) throw new HttpError(503, 'no record engine configured');
-      const input = parseRecordInput(body, tenant);
-      const evidence = input.evidence.map(e => {
-        const id = tdx.sha256(e.bytes);
-        store.putEvidence(id, e.bytes, e.media_type);
-        return { id, media_type: e.media_type, ...(e.role ? { role: String(e.role) } : {}) };
-      });
-      const job = { id: tdx.uuidv7(), entry_id: tdx.uuidv7(), tenant, auto_lock: !!body.auto_lock, input: { evidence, text: input.text, context: input.context } };
-      try { queue.submit(job); } catch (e) {
-        if (e.code === 'QUEUE_FULL') throw new HttpError(503, 'the processing queue is full; try again shortly', { retry_after_s: 30 });
-        throw e;
-      }
+      const job = enqueue(tenant, parseRecordInput(body, tenant), !!body.auto_lock);
       if (query.get('wait') === '1' || query.get('wait') === 'true') {
         await queue.wait(job.id, 120000);
         if (job.status === 'done') {
@@ -303,6 +313,25 @@ function createApi({ engine, store, key, registry, tokens = {}, workers = 2, max
       return { capsule_id: c.capsule_id, capsule_hash: hashes[i], proof: tdx.merkleProof(hashes, i), merkle_root: seal.merkle_root, seal };
     }],
 
+    ['GET', /^\/v1\/whatsapp\/webhook$/, false, ({ query }) => {
+      if (!wa) throw new HttpError(404, 'whatsapp is not configured');
+      const challenge = whatsappChannel.handshake(query, whatsapp.verifyToken);
+      if (challenge == null) throw new HttpError(403, 'verification failed');
+      return { raw: challenge, type: 'text/plain; charset=utf-8' };
+    }],
+    ['POST', /^\/v1\/whatsapp\/webhook$/, false, ({ raw, body, headers }) => {
+      if (!wa) throw new HttpError(404, 'whatsapp is not configured');
+      if (!whatsapp.allowUnsigned && !whatsappChannel.verifySignature(raw, headers['x-hub-signature-256'], whatsapp.appSecret)) {
+        log({ type: 'whatsapp_rejected', reason: 'signature' });
+        throw new HttpError(401, 'invalid signature');
+      }
+      const { events, statuses } = whatsappChannel.parseWebhook(body);
+      for (const s of statuses) if (s.status === 'failed') log({ type: 'whatsapp_delivery_failed', errors: s.errors });
+      // Acknowledge at once (Meta retries slow or non-2xx deliveries); records are made in the background.
+      wa.handle(events).catch(e => log({ type: 'error', path: '/v1/whatsapp/webhook', error: e.stack || String(e) }));
+      return { received: events.length };
+    }],
+
     ['GET', /^\/verify$/, false, () => ({ redirect: '/verify/' })],
     ['GET', /^\/verify\/$/, false, () => ({ raw: fs.readFileSync(path.join(PAGE_DIR, 'index.html')), type: 'text/html; charset=utf-8' })],
     ['GET', /^\/verify\/tdx-verify\.js$/, false, () => ({ raw: (bundle ||= buildBrowserBundle()), type: 'text/javascript; charset=utf-8' })],
@@ -329,8 +358,9 @@ function createApi({ engine, store, key, registry, tokens = {}, workers = 2, max
       }
       const [, re, needsAuth, fn] = route;
       const who = needsAuth ? auth(req) : null;
-      const body = req.method === 'POST' ? await readJson(req) : null;
-      const out = await fn({ params: re.exec(url.pathname).slice(1), body, query: url.searchParams, tenant: who?.tenant });
+      const raw = req.method === 'POST' ? await readRaw(req) : null;
+      const body = raw ? parseJson(raw) : null;
+      const out = await fn({ params: re.exec(url.pathname).slice(1), body, raw, headers: req.headers, query: url.searchParams, tenant: who?.tenant });
       if (out && out.redirect) { res.writeHead(301, { Location: out.redirect }); return res.end(); }
       if (out && out.raw) return send(res, 200, out.raw, out.type);
       const wrapped = out && typeof out.status === 'number' && out.body !== undefined;
@@ -351,9 +381,43 @@ function createApi({ engine, store, key, registry, tokens = {}, workers = 2, max
   const resumed = queue ? queue.recover() : 0;
   if (resumed) log({ type: 'queue_recovered', jobs: resumed });
 
+  // ── WhatsApp channel (optional) ───────────────────────────────────────────────────
+  const wa = whatsapp ? createWhatsApp(whatsapp) : null;
+  function createWhatsApp(cfg) {
+    if (!cfg.client || !cfg.tenant || !cfg.institution_ref) throw new Error('createApi: whatsapp needs client, tenant and institution_ref');
+    if (!cfg.appSecret && !cfg.allowUnsigned) throw new Error('createApi: whatsapp needs appSecret (or allowUnsigned: true for local testing)');
+    const country = cfg.country || 'IN';
+    const cp = packs.country(country);
+    const timezone = cfg.timezone || cp?.default_timezone || cp?.timezones?.[0] || 'UTC';
+    const refSecret = cfg.refSecret || cfg.appSecret || key.keyId;
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+    // The phone number never enters a record: educator_ref is a keyed hash of it.
+    const educatorRef = from => 'wa_' + crypto.createHmac('sha256', refSecret).update(`${cfg.tenant}|${from}`).digest('hex').slice(0, 24);
+    return whatsappChannel.createWhatsAppChannel({
+      client: cfg.client, quietMs: cfg.quietMs, verifyUrl: cfg.verifyUrl || null, timers: cfg.timers, log,
+      contextFor: (from, at) => ({
+        tenant: cfg.tenant, educator_ref: educatorRef(from), institution_ref: cfg.institution_ref,
+        institution_type: cfg.institution_type || 'school', country, timezone, ...(cfg.locale ? { locale: cfg.locale } : {}),
+        date: day.format(new Date(at)), captured_at: at,
+      }),
+      async submit({ evidence, text, context }) {
+        const job = enqueue(cfg.tenant, { evidence, text, context }, true);
+        await queue.wait(job.id, 180000);
+        if (job.status !== 'done') throw new Error(`capture ${job.status}: ${job.error || 'not finished'}`);
+        return job;
+      },
+      async confirm({ entry_id, educator_ref }) {
+        const list = entryCapsules(cfg.tenant, entry_id);
+        if (list[0].body.actor.educator_ref !== educator_ref) throw new HttpError(404, 'no such record');
+        return lockEntry(cfg.tenant, entry_id, 'confirmed_locked', { by: educator_ref, channel: 'whatsapp' });
+      },
+    });
+  }
+
   return {
     handler,
     queue,
+    whatsapp: wa,
     close: () => queue?.close(),
     listen(port = 8080, host = '127.0.0.1') {
       const server = http.createServer(handler);
@@ -367,7 +431,7 @@ function send(res, status, data, type = 'application/json; charset=utf-8') {
   res.end(data);
 }
 
-function readJson(req) {
+function readRaw(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
@@ -376,12 +440,14 @@ function readJson(req) {
       if (size > MAX_BODY) { reject(new HttpError(413, 'request too large')); req.destroy(); }
       else chunks.push(d);
     });
-    req.on('end', () => {
-      if (!size) return resolve({});
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); } catch { reject(new HttpError(400, 'body is not valid JSON')); }
-    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
+}
+
+function parseJson(raw) {
+  if (!raw.length) return {};
+  try { return JSON.parse(raw.toString('utf8')); } catch { throw new HttpError(400, 'body is not valid JSON'); }
 }
 
 /** POST /v1/records body → engine input; the tenant always comes from the token. */

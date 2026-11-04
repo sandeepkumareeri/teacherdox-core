@@ -25,6 +25,16 @@ One process owns a data directory (chain appends are serialised in memory per ed
 | `POST /v1/verify` | Body: anything a verifier accepts — a capsule, a list, a day export `{ capsules, seal, countersignatures }` — or `{ input, registry }` to check against another issuer's keys. Returns the full report. |
 | `GET /verify/` | The public verifier page. It verifies **in the browser** with WebCrypto; nothing is uploaded. |
 
+## WhatsApp webhook (public, signature-checked)
+
+On when the API is started with a WhatsApp configuration (`WHATSAPP_TOKEN` and friends; see
+[`whatsapp.md`](whatsapp.md)); otherwise both answer `404`.
+
+| | |
+|---|---|
+| `GET /v1/whatsapp/webhook` | Meta's verification handshake: echoes `hub.challenge` when `hub.verify_token` matches, else `403` |
+| `POST /v1/whatsapp/webhook` | Cloud API webhook. `X-Hub-Signature-256` must match the app secret, else `401`. Answers `{ "received": n }` at once; records are made in the background and the educator gets the reply on WhatsApp |
+
 ## Records (Bearer token)
 
 ### `POST /v1/records[?wait=1]` — capture
