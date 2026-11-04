@@ -1,7 +1,9 @@
 # TeacherDox Core
 
-**Open infrastructure that turns a photo or voice note from any classroom into a signed teaching
-record that anyone can verify.**
+**WhatsApp-first teaching records infrastructure.** A teacher sends a board photo and a voice note
+on WhatsApp; Meta's models turn it into a structured entry; the teacher's signature makes it a
+record that anyone can verify. Live in India; the open `.tdx` record works for any educator,
+institution, country and language.
 
 | Step | What happens | Model |
 |---|---|---|
